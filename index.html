@@ -191,6 +191,7 @@ const WEBINAR_NAME='Inovação com Responsabilidade';
 const CREDIT='Produzido com IA pela Aspirante Julieta Scheidt Dienstmann';
 const WEBINAR_BTN=`Assistir ao webinar “${WEBINAR_NAME}” ↗`;
 const WEBINAR_URL='https://unit.edusense.app/#/player/4497?trail_id=1138&lesson_id=48110&viewall=true';
+const NEXT_STEPS='Próximos passos: faça o curso LGPD 360° na Unit e leia a Política de Uso de IA da TOTVS no TDN.';
 const ANPD_URL='https://www.gov.br/anpd/pt-br/assuntos/titular-de-dados';
 // Ranking do time: URL do app da Web do Apps Script (termina em /exec). Vazio = ranking só neste navegador.
 const RANK_URL='https://script.google.com/macros/s/AKfycbxBpC-apHw1BoIptleq9de8wXGhKUXUlnP7KxL_zBusUILdKwG3bThr3PlkTP0bu_aM/exec';
@@ -216,30 +217,30 @@ const PHASES=[
  {name:'Faroeste Caboclo das IAs',planet:'PLANETA 02',theme:'desert',boss:'Capitão Atalho',
   bossTip:'Ele despenca do alto. Pise nele quando estiver no chão e pule quando ele avançar!',
   rule:'Confira a ferramenta e o uso permitido.',mission:'Destrua o hábito de usar qualquer IA com dados do trabalho.',
-  bad:['IA não aprovada','Upload sem verificar','Permissões excessivas'],
-  good:['Ferramenta aprovada','Uso autorizado','Acesso mínimo'],
-  do:'Use ferramentas aprovadas pela TOTVS para aquele tipo de dado e finalidade. Conceda somente as permissões necessárias.',
-  avoid:'Não envie arquivos a serviços desconhecidos nem conecte pastas e contas sem verificar a autorização.',
-  detail:'Uma ferramenta aprovada não significa que todo dado pode ser enviado. Confira as políticas da TOTVS e, na dúvida, consulte as áreas de Segurança e Privacidade.',
-  why:'A governança de dados só protege o que ela enxerga. Uma ferramenta fora das aprovadas ou um acesso amplo demais expõe mais informações do que a tarefa exige.',
+  bad:['IA não homologada','Upload sem verificar','Permissões excessivas'],
+  good:['IA homologada','Uso autorizado','Acesso mínimo'],
+  do:'Use só ferramentas de IA homologadas pela TOTVS, para aquele tipo de dado e finalidade. Conceda somente as permissões necessárias. Projeto novo de IA? Submeta à avaliação de riscos antes de começar.',
+  avoid:'Não use ferramentas de IA não homologadas, não envie arquivos a serviços desconhecidos nem conecte pastas e contas sem verificar a autorização.',
+  detail:'97% das violações de segurança relacionadas à IA envolveram sistemas sem controles adequados. A Política de Uso de IA da TOTVS (no TDN) veta ferramentas não homologadas. E, mesmo numa ferramenta homologada, nem todo dado pode ser enviado: na dúvida, consulte as áreas de Segurança e Privacidade.',
+  why:'A governança de dados só protege o que ela enxerga. Uma ferramenta não homologada ou um acesso amplo demais expõe mais informações do que a tarefa exige.',
   gates:[
-   {sit:'Você encontrou uma IA nova e gratuita na internet.',right:'Conferir se é ferramenta aprovada',wrong:'Testar com a planilha de clientes',
-    ok:'Para dados do trabalho, use só ferramentas aprovadas pela TOTVS.',bad:'Ferramenta não aprovada com dados de clientes é risco de exposição.'},
+   {sit:'Você encontrou uma IA nova e gratuita na internet.',right:'Conferir se é homologada',wrong:'Testar com a planilha de clientes',
+    ok:'Para dados do trabalho, use só ferramentas de IA homologadas pela TOTVS.',bad:'IA não homologada com dados de clientes é risco de exposição.'},
    {sit:'Um plugin de IA pede acesso a todo o seu Drive.',right:'Liberar só a pasta necessária',wrong:'Liberar tudo, é mais rápido',
     ok:'Acesso mínimo: só o que a tarefa realmente exige.',bad:'Permissões excessivas expõem muito mais do que a tarefa precisa.'}
   ]},
  {name:'Geleira do compartilhamento',planet:'PLANETA 03',theme:'snow',boss:'O Repassador',
   bossTip:'Ele repassa tudo lá do alto. Pise nele quando der o rasante!',
   rule:'Revise antes de compartilhar.',mission:'Destrua o hábito de repassar respostas sem revisar a privacidade.',
-  bad:['Resposta sem revisão','Conversa confidencial exposta','Detalhes que identificam'],
-  good:['Revisão humana','Remover dados extras','Destinatários corretos'],
-  do:'Revise prompts, anexos e respostas. Remova dados desnecessários e confira destinatários e permissões do compartilhamento.',
-  avoid:'Não compartilhe conversas ou respostas com informações protegidas. Não presuma que tirar o nome torna o conteúdo anônimo.',
-  detail:'Cargo, empresa, cidade e um caso muito específico podem revelar quem é a pessoa, mesmo sem o nome. Revise o conjunto de informações.',
+  bad:['Resposta sem revisão','Confiança cega na IA','Detalhes que identificam'],
+  good:['Revisão humana','Conferir fontes','Destinatários corretos'],
+  do:'Revise prompts, anexos e respostas. Confira fatos e fontes: a IA pode errar. Remova dados desnecessários e confira destinatários e permissões do compartilhamento.',
+  avoid:'Não repasse respostas da IA sem conferir, nem conversas com informações protegidas. Não presuma que tirar o nome torna o conteúdo anônimo.',
+  detail:'A IA pode se basear em fontes pouco confiáveis: em 2025, o Reddit foi o site mais citado por ferramentas de IA. E cargo, cidade e um caso específico podem revelar quem é a pessoa, mesmo sem o nome. Supervisão humana é um dos fundamentos da governança de IA na TOTVS.',
   why:'A responsabilidade é individual: quem compartilha responde pelo que envia. Um repasse sem revisão multiplica a exposição para muito mais pessoas.',
   gates:[
-   {sit:'A IA gerou um resumo da reunião para mandar ao time.',right:'Revisar e tirar dados extras',wrong:'Encaminhar direto para todos',
-    ok:'Revisão humana antes de compartilhar, sempre.',bad:'Repassar sem revisar multiplica a exposição.'},
+   {sit:'A IA trouxe um número para o relatório que vai ao cliente.',right:'Conferir a fonte antes de usar',wrong:'Usar direto, a IA não erra',
+    ok:'A IA pode errar ou usar fontes pouco confiáveis. Você responde pelo que envia.',bad:'Confiança excessiva na IA: sem conferir, um dado errado vai parar no cliente.'},
    {sit:'Você tirou o nome do cliente de um relato. Ele já está anônimo?',right:'Não: cargo e cidade ainda identificam',wrong:'Sim, pode compartilhar',
     ok:'Detalhes combinados podem revelar quem é a pessoa.',bad:'Sem o nome, cargo, cidade e um caso específico ainda identificam alguém.'}
   ]}
@@ -1100,7 +1101,7 @@ function checklistText(){return PHASES.map((p,i)=>`${i+1}. ${p.rule}\nFAÇA: ${p
 function ruleText(i){const p=PHASES[i];return `✅ Checklist JEDAI · Regra de ouro ${i+1}/3: ${p.rule}\nFAÇA: ${p.do}\nEVITE: ${p.avoid}\nPOR QUE IMPORTA: ${p.detail}\n\nWebinar "${WEBINAR_TITLE}": ${WEBINAR_URL}`;}
 function toastBox(){return document.getElementById('ptoast')||document.getElementById('toast2')||document.getElementById('mtoast');}
 function gameLink(){try{return /^https?:/.test(location.href)?location.href.split('#')[0]:'[link do jogo]';}catch(e){return '[link do jogo]';}}
-function shareMessage(){return `Olá, time! 👋\n\nSeparei 3 regras de ouro para usar IA no trabalho sem colocar a privacidade em risco, a partir do tema do webinar "${WEBINAR_TITLE}".\n\n${checklistText()}\n\nNa dúvida, sigam as políticas de privacidade e segurança da informação da TOTVS.\n\nPara fixar de um jeito diferente, montei um mini-game com essas regras: JEDAI · Guardiões dos Dados\n${gameLink()}\n\nRecomendo muito que todos tirem um tempinho para assistir à gravação completa. É fundamental que todos nós estejamos na mesma página sobre como usar a IA com segurança:\n${WEBINAR_TITLE}\n${WEBINAR_URL}`;}
+function shareMessage(){return `Olá, time! 👋\n\nSeparei 3 regras de ouro para usar IA no trabalho sem colocar a privacidade em risco, a partir do tema do webinar "${WEBINAR_TITLE}".\n\n${checklistText()}\n\nNa dúvida, sigam as políticas de privacidade e segurança da informação da TOTVS. ${NEXT_STEPS}\n\nPara fixar de um jeito diferente, montei um mini-game com essas regras: JEDAI · Guardiões dos Dados\n${gameLink()}\n\nRecomendo muito que todos tirem um tempinho para assistir à gravação completa. É fundamental que todos nós estejamos na mesma página sobre como usar a IA com segurança:\n${WEBINAR_TITLE}\n${WEBINAR_URL}`;}
 function copyText(t,toastEl,okMsg){
   const fail=()=>{if(toastEl){toastEl.innerHTML='Não deu para copiar automaticamente. Selecione o texto abaixo e copie:<textarea class="copybox" id="copyFallback" readonly></textarea>';const ta=document.getElementById('copyFallback');ta.value=t;ta.focus();ta.select();}};
   try{navigator.clipboard.writeText(t).then(()=>{if(toastEl)toastEl.textContent=okMsg;},fail);}catch(e){fail();}
@@ -1182,6 +1183,7 @@ function showFinal(){
    <div class="prizebox"><h3>🏆 SEU PRÊMIO COMPLETO</h3>
     <p>Você destravou o checklist das <b>3 regras de ouro</b> para usar IA sem colocar a privacidade em risco. Baixe, copie e compartilhe com o seu time:</p>
     <div class="row"><button class="btn primary" data-act="infographic">⬇ BAIXAR INFOGRÁFICO</button><button class="btn go" data-act="share">COPIAR MENSAGEM PARA O TIME</button><button class="btn" data-act="copyList">Copiar checklist</button><a class="btn" href="${WEBINAR_URL}" title="${esc(WEBINAR_TITLE)}" target="_blank" rel="noopener">${WEBINAR_BTN}</a></div>
+    <p class="note">📚 ${NEXT_STEPS}</p>
     <div class="toast" id="toast2"></div></div>
    ${rankBoxHTML(NET.role==='guest'?'guest':true,G.np>1?'2P':'1P')}
    <div class="toast" id="toast"></div>
