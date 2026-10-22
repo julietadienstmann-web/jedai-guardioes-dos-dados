@@ -49,9 +49,6 @@ header{width:100%;display:flex;align-items:center;justify-content:space-between;
 #strip .opts{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
 #strip .opt{display:flex;align-items:center;gap:8px;background:#1a2550;border:2px solid #3a4a88;border-radius:6px;padding:5px 9px;font-size:14px}
 #strip .opt i{font-style:normal;font-family:var(--pix);font-size:10px;background:var(--gold);color:#3a2300;border-radius:3px;padding:4px 6px}
-.opts.big{display:grid;gap:10px;margin:14px 0}
-.opts.big .opt{display:flex;align-items:center;gap:12px;background:#1a2550;border:2px solid #3a4a88;border-radius:8px;padding:10px 12px;font-size:17px;font-weight:600}
-.opts.big .opt i{font-style:normal;font-family:var(--pix);font-size:13px;background:var(--gold);color:#3a2300;border-radius:4px;padding:6px 8px}
 #strip .opt.right{border-color:var(--green)} #strip .opt.right i{background:var(--green);color:#10300f}
 #strip .opt.wrong{border-color:#7a3a3a;opacity:.8} #strip .opt.wrong i{background:var(--red);color:#3a0f0a}
 #strip .muted{color:var(--muted)}
@@ -548,14 +545,6 @@ function giveHeart(p,x,y){SFX.power();
   else{addScore(500);floatTxt(x,y,'+500','#ffd25e');flash('ok','CORAÇÕES CHEIOS',`Já são ${MAXH} corações: este virou +500 pontos.`,3);}}
 function setUsed(c,r,t){if(L.grid[r][c]==='u')return;L.grid[r][c]='u';L.tix[r][c]=t;L.used.push([c,r,t]);}
 function gateOpts(g){return g.correctIsA?[g.data.right,g.data.wrong]:[g.data.wrong,g.data.right];}
-function showGateQ(g){
-  clearKeys();const [a,b]=gateOpts(g);const q=/\?$/.test(g.data.sit)?'':' O que você faz?';
-  showModal(`<div class="card"><p class="kicker">🤔 DECISÃO · ${L.ph.planet}</p><h2>${g.data.sit}${q}</h2>
-    <div class="opts big"><span class="opt"><i>A</i>${a}</span><span class="opt"><i>B</i>${b}</span></div>
-    <p>As <b>caixas A e B</b> logo à frente são as respostas. Pule e <b>bata por baixo</b> na caixa da resposta certa. <b>Só vale uma batida!</b></p>
-    <div class="row"><button class="btn primary" data-act="closeModal">ENTENDI, VOU ESCOLHER ▶</button></div></div>`);
-  const btn=modal.querySelector('.primary');if(btn)setTimeout(()=>btn.focus({preventScroll:true}),30);
-}
 function answerGate(c,r,ch){
   const g=L.gates.find(g=>(ch==='A'&&g.ac===c&&g.ra===r)||(ch==='B'&&g.bc===c&&g.rb===r));
   if(!g||g.answered){SFX.bump();return;}
@@ -754,7 +743,6 @@ function update(dt){
   for(const k of L.checks)if(!k.on&&activePlayers().some(p=>p.x+p.w>k.x&&p.x<k.x+T)){k.on=true;L.respawn={x:k.x,y:k.y-10};SFX.check();{const q=activePlayers()[0];for(const g of PL)if(g.ghost&&q)revive(g,q);}
     flash('flag','BANDEIRA ATIVADA ✓','Progresso salvo! Se cair em um buraco, você volta para esta bandeira e perde só 1 coração.',5);}
   if(L.bossState==='none'&&G.state==='play'&&activePlayers().some(p=>p.x>(L.arena+3)*T))startBoss();
-  if(G.state==='play')for(const g of L.gates)if(!g.asked&&!g.answered&&activePlayers().some(p=>p.x+p.w>g.sc*T-4)){g.asked=true;showGateQ(g);netFx(['q',g.gi]);}
   updateCamera(dt);
   if(G.shake>0)G.shake-=dt;
   if(G.msg&&G.msg.t>0)G.msg.t-=dt;
@@ -804,9 +792,10 @@ function render(){
     tile(t,c*T,y);
     if(L.grid[r][c]==='A'||L.grid[r][c]==='B')letters.push({ch:L.grid[r][c],x:c*T+9-cx,y:y+9});
   }
+  // answered blocks: ✓/✗ marks only while that block is on screen (off-screen ones used to pile up at the edge)
   for(const g of L.gates)if(g.answered){
-    letters.push({x:g.ac*T+9-cx,y:g.ra*T+9,mark:g.correctIsA,chosen:g.chosen==='A'});
-    letters.push({x:g.bc*T+9-cx,y:g.rb*T+9,mark:!g.correctIsA,chosen:g.chosen==='B'});}
+    for(const m of [{x:g.ac*T+9-cx,y:g.ra*T+9,mark:g.correctIsA,chosen:g.chosen==='A'},{x:g.bc*T+9-cx,y:g.rb*T+9,mark:!g.correctIsA,chosen:g.chosen==='B'}])
+      if(m.x>0&&m.x<VW)letters.push(m);}
   for(const m of L.movers)for(let x=0;x<m.w;x+=T)tile(146,m.x+x,m.y-6);
   for(const s of L.springs)tile(s.t>0?108:107,s.x,s.y);
   for(const it of L.items){
@@ -875,7 +864,7 @@ function render(){
     let best=null,bd=110;
     for(const e of L.enemies)if(e.alive&&e.active)for(const p of act){const d=Math.abs(e.x-p.x)+Math.abs(e.y-p.y)*.5;if(d<bd){bd=d;best=e;}}
     if(best)sTextClamped(best.type==='x'?best.label+' · NÃO PISE!':best.label,(best.x+best.w/2-cx)*S,(best.y-14)*S,small,'#ffb4a8');
-    const g=L.gates.find(g=>g.asked&&!g.answered&&act.some(p=>p.x>(g.sc-1)*T&&p.x<(g.bc+2)*T));
+    const g=L.gates.find(g=>!g.answered&&act.some(p=>p.x>(g.sc-4)*T&&p.x<(g.bc+2)*T));
     if(g){const [a,b]=gateOpts(g);
       ctx.fillStyle='rgba(10,15,34,.72)';ctx.fillRect(4*S,22*S,(VW-8)*S,33*S);
       sTextFit(g.data.sit,(VW/2)*S,29*S,textPx(5),'#ffffff');
@@ -914,7 +903,7 @@ const stripEl=document.getElementById('strip');
 function updateStrip(){
   let key,html;
   const playing=['play','bossdead'].includes(G.state)&&L;
-  const near=g=>activePlayers().some(p=>p.x>(g.sc-1)*T&&p.x<(g.bc+2)*T);
+  const near=g=>activePlayers().some(p=>p.x>(g.sc-4)*T&&p.x<(g.bc+2)*T);
   const gate=playing?L.gates.find(near):null;
   if(gate&&!gate.answered){
     const a=gate.correctIsA?gate.data.right:gate.data.wrong, bb=gate.correctIsA?gate.data.wrong:gate.data.right;
@@ -1397,7 +1386,7 @@ function makeSnap(){
   s.E=L.enemies.filter(vis).map(e=>[e.id,e.type,r(e.x),r(e.y),e.alive?1:0,e.kind==='pop'?2:e.kind==='squash'?1:0,e.vx>0?1:0,r(e.t*10),e.onGround?1:0,L.ph.bad.indexOf(e.label),e.active?1:0]);
   s.I=L.items.filter(vis).map(it=>[it.id,it.kind[0],r(it.x),r(it.y),it.rise>0?1:0,it.label?L.ph.good.indexOf(it.label):-1]);
   s.U=L.used;s.K=L.checks.map(k=>k.on?1:0);
-  s.Gt=L.gates.map(g=>[g.correctIsA?1:0,g.answered?1:0,g.chosen||'',g.result||'',g.asked?1:0]);
+  s.Gt=L.gates.map(g=>[g.correctIsA?1:0,g.answered?1:0,g.chosen||'',g.result||'']);
   s.M=L.movers.map(m=>r(m.x));
   const b=L.boss;s.B=b?[r(b.x),r(b.y),b.w,b.h,b.hp,b.max,b.state,r(b.inv*10),b.flip?1:0,b.dead?1:0,b.gone?1:0,r(b.t*10)]:null;
   s.H=L.hazards.map(h=>[h.kind[0],r(h.x),r(h.y),h.vx>0?1:0]);
@@ -1476,7 +1465,7 @@ function applySnap(s){
       it.kind=kind;it.x=num(a[2]);it.y=num(a[3]);it.rise=a[4]?1:0;it.label=a[5]>=0?L.ph.good[num(a[5])]:undefined;return it;});}
   if(Array.isArray(s.U))for(const u of s.U){if(!Array.isArray(u))continue;const c=num(u[0]),r=num(u[1]),t=num(u[2]);if(c>=0&&c<L.W&&r>=0&&r<12&&L.grid[r][c]!=='u'){L.grid[r][c]='u';L.tix[r][c]=t;}}
   if(Array.isArray(s.K))s.K.forEach((v,i)=>{if(L.checks[i])L.checks[i].on=!!v;});
-  if(Array.isArray(s.Gt))s.Gt.forEach((a,i)=>{const g=L.gates[i];if(!g||!Array.isArray(a))return;g.correctIsA=!!a[0];g.answered=!!a[1];g.chosen=a[2]==='A'||a[2]==='B'?a[2]:null;g.result=a[3]==='ok'||a[3]==='bad'?a[3]:null;g.asked=!!a[4];});
+  if(Array.isArray(s.Gt))s.Gt.forEach((a,i)=>{const g=L.gates[i];if(!g||!Array.isArray(a))return;g.correctIsA=!!a[0];g.answered=!!a[1];g.chosen=a[2]==='A'||a[2]==='B'?a[2]:null;g.result=a[3]==='ok'||a[3]==='bad'?a[3]:null;});
   if(Array.isArray(s.M))s.M.forEach((x,i)=>{if(L.movers[i])L.movers[i].x=num(x);});
   if(Array.isArray(s.B)){const a=s.B;let b=L.boss;if(!b){b=L.boss={x:num(a[0]),y:num(a[1])};}
     b.tx=num(a[0]);b.ty=num(a[1]);b.w=num(a[2]);b.h=num(a[3]);b.hp=num(a[4]);b.max=Math.max(1,num(a[5]));b.state=String(a[6]);b.inv=num(a[7])/10;b.flip=!!a[8];b.dead=!!a[9];b.gone=!!a[10];b.t=num(a[11])/10;}
@@ -1491,7 +1480,6 @@ function applyFx(e){
     case 'f':G.msg={kind:['ok','bad','boss','gate','flag',''].includes(e[1])?e[1]:'',title:safeHtml(e[2]),text:safeHtml(e[3]),t:Math.min(10,n(e[4])||4),low:!!e[5]};break;
     case 't':L.floats.push({x:n(e[1]),y:n(e[2]),text:String(e[3]).slice(0,20),color:col(e[4]),t:1});break;
     case 'b':{const cnt=Math.min(16,n(e[4]));for(let i=0;i<cnt;i++){const a=Math.random()*Math.PI*2,sp=40+Math.random()*120;L.parts.push({kind:'p',x:n(e[1]),y:n(e[2]),vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-60,t:.5+Math.random()*.4,color:col(e[3])});}break;}
-    case 'q':{const g=L.gates.find(g=>g.gi===n(e[1]));if(g&&!g.answered){g.asked=true;showGateQ(g);}break;}
     case 'k':L.bumps.push({c:n(e[1]),r:n(e[2]),t:.18});break;
     case 'p':if(e[1]==='coinpop')L.parts.push({kind:'coinpop',x:n(e[2]),y:n(e[3]),vy:n(e[4]),t:Math.min(1,n(e[5]))});break;
   }
