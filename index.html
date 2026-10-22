@@ -91,6 +91,8 @@ footer span{font-family:var(--pix);font-size:8px;line-height:1.6}
 .rule h3{margin:0 0 8px;font-size:15px}
 .rule h3 span{font-family:var(--pix);font-size:9px;color:var(--gold);margin-right:6px}
 .rule.locked{opacity:.65;border-style:dashed}
+ul.chk{margin:6px 0 0;padding-left:18px}ul.chk li{margin:4px 0;font-size:14px;line-height:1.4}
+.note.tip{color:var(--gold);font-weight:600}
 .rule .row{margin-top:8px}
 .prizebox{border:3px solid var(--gold);border-radius:8px;padding:14px 16px;margin:14px 0;background:linear-gradient(180deg,rgba(255,210,94,.16),rgba(255,210,94,.04))}
 .prizebox h3{margin:0 0 6px;font-family:var(--pix);font-size:13px;color:var(--gold);line-height:1.5}
@@ -246,6 +248,17 @@ const PHASES=[
     ok:'Detalhes combinados podem revelar quem é a pessoa.',bad:'Sem o nome, cargo, cidade e um caso específico ainda identificam alguém.'}
   ]}
 ];
+
+// The prize of each planet: a checklist of what to do and what to avoid on that planet's theme.
+const CHECKLISTS=[
+ {do:['Use o mínimo de dados necessário para a tarefa.','Prefira exemplos fictícios.','Remova nomes, telefones, CPF e outras informações que identificam pessoas.'],
+  avoid:['Colar senhas, tokens ou chaves de acesso no chat.','Colar informações pessoais ou confidenciais em usos não autorizados.','Mandar dados do cliente quando um exemplo fictício resolve.']},
+ {do:['Use só ferramentas de IA homologadas pela TOTVS.','Confira se aquele tipo de dado e a finalidade são permitidos.','Conceda somente as permissões necessárias (acesso mínimo).','Projeto novo de IA? Submeta à avaliação de riscos antes de começar.'],
+  avoid:['Usar ferramentas de IA não homologadas.','Enviar arquivos a serviços desconhecidos.','Conectar pastas e contas sem verificar a autorização.','Liberar acesso a tudo só porque é mais rápido.']},
+ {do:['Revise prompts, anexos e respostas antes de compartilhar.','Confira fatos e fontes: a IA pode errar.','Remova dados desnecessários.','Confira destinatários e permissões do compartilhamento.'],
+  avoid:['Repassar respostas da IA sem conferir.','Compartilhar conversas com informações protegidas.','Presumir que tirar o nome deixa o conteúdo anônimo: cargo, cidade e um caso específico identificam.']}
+];
+PHASES.forEach((p,i)=>p.list=CHECKLISTS[i]);
 
 /* ================= LEVELS ================= */
 const LEVELS=[
@@ -1096,13 +1109,15 @@ function showWon(){
   G.ovKey='won';
   G.msg=null;const ph=L.ph;if(!G.unlocked.includes(L.pi))G.unlocked.push(L.pi);G.prizeNew=true;updateRulesBtn();SFX.win();
   const last=L.pi===2;
-  showOv(`<div class="card wide"><p class="kicker">CHEFÃO DERROTADO · ${ph.planet}</p><h2>🎁 Parabéns! Você destravou o prêmio desta fase</h2>
-   <p>Você venceu <b>${ph.boss}</b> e concluiu <b>${ph.name}</b>. Seu prêmio é o checklist da regra de ouro <b>“${ph.rule}”</b>. Ele fica guardado no botão <b>🎁 Resgate seu prêmio</b>, lá em cima.</p>
-   <div class="cols"><div class="box do"><h4>✓ FAÇA</h4>${ph.do}</div><div class="box avoid"><h4>✗ EVITE</h4>${ph.avoid}</div></div>
-   <div class="box why"><h4>POR QUE IMPORTA</h4>${ph.why}</div>
-   <div class="stats"><div class="stat"><span>Pontos</span><b>${G.score}</b></div><div class="stat"><span>Boas práticas na fase</span><b>${L.phasePractices}</b></div><div class="stat"><span>Prêmios</span><b>${G.unlocked.length}/3</b></div></div>
+  showOv(`<div class="card wide"><p class="kicker">CHEFÃO DERROTADO · ${ph.planet} · PRÊMIO ${G.unlocked.length}/3</p><h2>🎁 Parabéns! Seu prêmio: o checklist “${ph.rule}”</h2>
+   <p>Você venceu <b>${ph.boss}</b> e concluiu <b>${ph.name}</b>. Este é o seu checklist do que fazer e do que evitar neste tema:</p>
+   <div class="cols"><div class="box do"><h4>✓ FAÇA</h4>${ulHTML(ph.list.do)}</div><div class="box avoid"><h4>✗ EVITE</h4>${ulHTML(ph.list.avoid)}</div></div>
+   <div class="box why"><h4>POR QUE IMPORTA</h4>${ph.detail}</div>
+   ${prizeActions(L.pi)}
    <div class="toast" id="ptoast"></div>
-   <div class="row"><button class="btn" data-act="copyRule" data-i="${L.pi}">Copiar este checklist</button><button class="btn go" data-act="${last?'final':'nextPhase'}">${last?'▶ VER RESULTADO':'▶ PRÓXIMO PLANETA'}</button></div></div>`);
+   ${PRIZE_TIP}
+   <div class="stats"><div class="stat"><span>Pontos</span><b>${G.score}</b></div><div class="stat"><span>Boas práticas na fase</span><b>${L.phasePractices}</b></div><div class="stat"><span>Prêmios</span><b>${G.unlocked.length}/3</b></div></div>
+   <div class="row"><button class="btn primary" data-act="${last?'final':'nextPhase'}">${last?'▶ VER RESULTADO':'▶ PRÓXIMO PLANETA'}</button></div></div>`);
 }
 function showLost(){
   G.ovKey='lost';
@@ -1113,23 +1128,35 @@ function showLost(){
    <div class="row"><button class="btn primary" data-act="retry">↻ TENTAR DE NOVO</button></div></div>`);
 }
 function retry(){const s=G.snap;G.score=s.score;G.coins=s.coins;G.practices=s.practices;G.decisions=s.dec;G.decisionsTotal=s.decT;showBrief(G.phase);launch();}
-function checklistText(){return PHASES.map((p,i)=>`${i+1}. ${p.rule}\nFAÇA: ${p.do}\nEVITE: ${p.avoid}`).join('\n\n');}
-function ruleText(i){const p=PHASES[i];return `✅ Checklist JEDAI · Regra de ouro ${i+1}/3: ${p.rule}\nFAÇA: ${p.do}\nEVITE: ${p.avoid}\nPOR QUE IMPORTA: ${p.detail}\n\nWebinar "${WEBINAR_TITLE}": ${WEBINAR_URL}`;}
-function toastBox(){return document.getElementById('ptoast')||document.getElementById('toast2')||document.getElementById('mtoast');}
+const bullets=a=>a.map(t=>'• '+t).join('\n');
+function ruleChecklist(i){const p=PHASES[i];return `${i+1}. ${p.rule}\n✅ FAÇA\n${bullets(p.list.do)}\n❌ EVITE\n${bullets(p.list.avoid)}`;}
+function checklistText(){return PHASES.map((p,i)=>ruleChecklist(i)).join('\n\n');}
+function ruleText(i){return `Checklist JEDAI · Regra de ouro ${ruleChecklist(i)}\n\nWebinar "${WEBINAR_TITLE}": ${WEBINAR_URL}`;}
+function friendText(i){const p=PHASES[i];return `Olá! 👋 Joguei o JEDAI · Guardiões dos Dados e destravei o checklist da regra de ouro ${i+1}/3: “${p.rule}”\n\n✅ FAÇA\n${bullets(p.list.do)}\n\n❌ EVITE\n${bullets(p.list.avoid)}\n\nPor que importa: ${p.detail}\n\nBaseado no webinar "${WEBINAR_TITLE}": ${WEBINAR_URL}\nJogue também: ${gameLink()}`;}
+function sendText(txt){const t=toastBox();
+  if(navigator.share&&matchMedia('(pointer:coarse)').matches){navigator.share({title:'Checklist JEDAI · IA responsável',text:txt}).catch(()=>copyText(txt,t,'Mensagem copiada! Cole no Slack, Teams ou e-mail do colega.'));return;}
+  copyText(txt,t,'Mensagem copiada! Cole no Slack, Teams ou e-mail do colega.');}
+function toastBox(){const b=visibleBox();return (b&&b.querySelector('#mtoast,#ptoast,#toast2'))||document.getElementById('ptoast')||document.getElementById('toast2')||document.getElementById('mtoast');}
 function gameLink(){try{return /^https?:/.test(location.href)?location.href.split('#')[0]:'[link do jogo]';}catch(e){return '[link do jogo]';}}
 function shareMessage(){return `Olá, time! 👋\n\nSeparei 3 regras de ouro para usar IA no trabalho sem colocar a privacidade em risco, a partir do tema do webinar "${WEBINAR_TITLE}".\n\n${checklistText()}\n\nNa dúvida, sigam as políticas de privacidade e segurança da informação da TOTVS. ${NEXT_STEPS}\n\nPara fixar de um jeito diferente, montei um mini-game com essas regras: JEDAI · Guardiões dos Dados\n${gameLink()}\n\nRecomendo muito que todos tirem um tempinho para assistir à gravação completa. É fundamental que todos nós estejamos na mesma página sobre como usar a IA com segurança:\n${WEBINAR_TITLE}\n${WEBINAR_URL}`;}
 function copyText(t,toastEl,okMsg){
   const fail=()=>{if(toastEl){toastEl.innerHTML='Não deu para copiar automaticamente. Selecione o texto abaixo e copie:<textarea class="copybox" id="copyFallback" readonly></textarea>';const ta=document.getElementById('copyFallback');ta.value=t;ta.focus();ta.select();}};
   try{navigator.clipboard.writeText(t).then(()=>{if(toastEl)toastEl.textContent=okMsg;},fail);}catch(e){fail();}
 }
-function ruleHTML(i,copyBtn){const p=PHASES[i];
-  return `<div class="rule"><h3><span>${i+1}/3</span>${p.rule}</h3><p><span class="d">FAÇA:</span> ${p.do}</p><p><span class="a">EVITE:</span> ${p.avoid}</p><p><span class="w">POR QUE IMPORTA:</span> ${p.detail}</p>${copyBtn?`<div class="row"><button class="btn" data-act="copyRule" data-i="${i}">Copiar este checklist</button></div>`:''}</div>`;}
+const ulHTML=a=>`<ul class="chk">${a.map(t=>`<li>${t}</li>`).join('')}</ul>`;
+function prizeActions(i){return `<div class="row"><button class="btn go" data-act="sendRule" data-i="${i}">📨 Enviar para um colega</button><button class="btn" data-act="copyRule" data-i="${i}">Copiar checklist</button><button class="btn" data-act="infographic" data-i="${i}">⬇ Baixar infográfico</button></div>`;}
+function ruleHTML(i,actions){const p=PHASES[i];
+  return `<div class="rule"><h3><span>${i+1}/3</span>${p.rule}</h3>
+    <div class="cols"><div class="box do"><h4>✓ FAÇA</h4>${ulHTML(p.list.do)}</div><div class="box avoid"><h4>✗ EVITE</h4>${ulHTML(p.list.avoid)}</div></div>
+    <p><span class="w">POR QUE IMPORTA:</span> ${p.detail}</p>${actions?prizeActions(i):''}</div>`;}
+const PRIZE_TIP=`<p class="note tip">🎁 Seus prêmios ficam guardados no botão <b>Resgate seu prêmio</b>, na barra superior. Abra quando quiser.</p>`;
 function rulesHTML(){return PHASES.map((p,i)=>ruleHTML(i,false)).join('');}
 /* ----- downloadable infographic (PNG drawn on a canvas, personalised with nickname and score) ----- */
-async function downloadInfographic(){
+async function downloadInfographic(only){
   const t=toastBox();if(t)t.textContent='⏳ Gerando o infográfico…';
   try{await Promise.all([document.fonts.load('40px "Press Start 2P"'),document.fonts.load('700 34px Inter'),document.fonts.load('400 26px Inter')]);}catch(e){}
-  const W=1080,PAD=64,ACC=['#a4e56f','#ffd25e','#8fd3ff'];
+  const W=1080,PAD=64,ACC=['#a4e56f','#ffd25e','#8fd3ff'],single=only!=null&&only>=0&&only<3;
+  const fname=single?`JEDAI-checklist-regra-${only+1}.png`:'JEDAI-checklist-IA-responsavel.png';
   const nickEl=document.getElementById('nick');const nick=((nickEl&&nickEl.value)||myNick()||'').trim().slice(0,24);
   const c=document.createElement('canvas');c.width=W;c.height=3000;const x=c.getContext('2d');x.imageSmoothingEnabled=false;
   const PIX=sz=>`${sz}px "Press Start 2P", ui-monospace, monospace`,SANS=(w,sz)=>`${w} ${sz}px Inter, system-ui, -apple-system, sans-serif`;
@@ -1145,20 +1172,25 @@ async function downloadInfographic(){
     text('MISSÃO IA RESPONSÁVEL',W/2,y,PIX(20),'#e9f0ff','center');y+=44;
     x.fillStyle='#7a3b00';x.font=PIX(84);x.textAlign='center';x.fillText('JEDAI',W/2+6,y+6);text('JEDAI',W/2,y,PIX(84),'#ffd25e','center');y+=110;
     text('GUARDIÕES DOS DADOS',W/2,y,PIX(22),'#e9f0ff','center');y+=64;
-    for(const l of wrap('3 regras de ouro para usar IA no trabalho sem colocar a privacidade em risco',SANS(700,40),W-2*PAD)){text(l,W/2,y,SANS(700,40),'#f3f6ff','center');y+=52;}
+    const head=single?`Checklist da regra de ouro ${only+1} de 3: IA no trabalho sem colocar a privacidade em risco`:'3 regras de ouro para usar IA no trabalho sem colocar a privacidade em risco';
+    for(const l of wrap(head,SANS(700,40),W-2*PAD)){text(l,W/2,y,SANS(700,40),'#f3f6ff','center');y+=52;}
     y+=8;
     const who=[nick,G.score>0?G.score+' PONTOS':''].filter(Boolean).join(' · ');
-    if(who){text(('MISSÃO CUMPRIDA · '+who).toUpperCase(),W/2,y,PIX(16),'#a4e56f','center');y+=46;}
+    const tag=single?`PRÊMIO DO ${PHASES[only].planet}`:'MISSÃO CUMPRIDA';
+    if(who||single){text((tag+(who?' · '+who:'')).toUpperCase(),W/2,y,PIX(16),'#a4e56f','center');y+=46;}
     y+=10;
-    PHASES.forEach((p,i)=>{
-      const inner=W-2*PAD-56,title=wrap(p.rule,SANS(700,34),inner-70),dos=wrap(p.do,SANS(400,26),inner),avs=wrap(p.avoid,SANS(400,26),inner);
-      const h=40+title.length*44+18+30+dos.length*36+18+30+avs.length*36+34;
+    PHASES.forEach((p,i)=>{if(single&&i!==only)return;
+      const inner=W-2*PAD-56,title=wrap(p.rule,SANS(700,34),inner-70);
+      const lines=a=>a.map(t=>wrap(t,SANS(400,26),inner-28));
+      const dos=lines(p.list.do),avs=lines(p.list.avoid),cnt=a=>a.reduce((n,l)=>n+l.length,0);
+      const h=40+title.length*44+18+30+cnt(dos)*36+dos.length*8+18+30+cnt(avs)*36+avs.length*8+34;
       x.fillStyle='rgba(15,24,56,.92)';x.fillRect(PAD,y,W-2*PAD,h);x.strokeStyle=ACC[i];x.lineWidth=5;x.strokeRect(PAD,y,W-2*PAD,h);
       x.fillStyle=ACC[i];x.fillRect(PAD+28,y+30,52,52);text(String(i+1),PAD+54,y+42,PIX(26),'#0a0e1c','center');
       let yy=y+36;for(const l of title){text(l,PAD+100,yy,SANS(700,34),'#ffffff');yy+=44;}
       yy=Math.max(yy,y+98)+10;
-      text('✓ FAÇA',PAD+28,yy,PIX(16),'#a4e56f');yy+=32;for(const l of dos){text(l,PAD+28,yy,SANS(400,26),'#dfe6ff');yy+=36;}
-      yy+=16;text('✗ EVITE',PAD+28,yy,PIX(16),'#ff7a6b');yy+=32;for(const l of avs){text(l,PAD+28,yy,SANS(400,26),'#dfe6ff');yy+=36;}
+      const items=(arr,col)=>{for(const it of arr){x.fillStyle=col;x.fillRect(PAD+30,yy+11,10,10);for(const l of it){text(l,PAD+56,yy,SANS(400,26),'#dfe6ff');yy+=36;}yy+=8;}};
+      text('✓ FAÇA',PAD+28,yy,PIX(16),'#a4e56f');yy+=32;items(dos,'#a4e56f');
+      yy+=10;text('✗ EVITE',PAD+28,yy,PIX(16),'#ff7a6b');yy+=32;items(avs,'#ff7a6b');
       y+=h+28;});
     y+=6;
     for(const l of wrap('Na dúvida, siga as políticas de privacidade e segurança da informação da TOTVS.',SANS(700,26),W-2*PAD)){text(l,W/2,y,SANS(700,26),'#ffd25e','center');y+=36;}
@@ -1171,8 +1203,8 @@ async function downloadInfographic(){
   }
   const H=draw(3000);c.height=H;x.imageSmoothingEnabled=false;draw(H);
   c.toBlob(b=>{if(!b){if(t)t.textContent='Não consegui gerar a imagem neste navegador.';return;}
-    const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download='JEDAI-checklist-IA-responsavel.png';document.body.appendChild(a);a.click();a.remove();
-    setTimeout(()=>URL.revokeObjectURL(u),4000);if(t)t.textContent='Infográfico baixado! Procure o arquivo JEDAI-checklist-IA-responsavel.png na pasta Downloads.';},'image/png');
+    const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=fname;document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(u),4000);if(t)t.textContent=`Infográfico baixado! Procure o arquivo ${fname} na pasta Downloads.`;},'image/png');
 }
 function lockedHTML(i){const p=PHASES[i];
   return `<div class="rule locked"><h3><span>${i+1}/3</span>🔒 Prêmio bloqueado</h3><p>Vença <b>${p.boss}</b> no <b>${p.planet.toLowerCase().replace('planeta','Planeta')} · ${p.name}</b> para destravar este checklist.</p></div>`;}
@@ -1181,8 +1213,9 @@ function showPrizes(){
   showModal(`<div class="card wide"><p class="kicker">🎁 MEUS PRÊMIOS · ${n}/3 DESTRAVADOS</p><h2>${n?'Seus checklists de IA responsável':'Seus prêmios ainda estão trancados'}</h2>
    <p>${n===3?'Parabéns! Você destravou as 3 regras de ouro. Baixe o infográfico e compartilhe com o seu time.':n?'Cada chefão derrotado destrava o checklist da regra de ouro daquele planeta. Copie e use no seu dia a dia!':'Comece a missão: cada chefão derrotado destrava o checklist da regra de ouro daquele planeta.'}</p>
    ${PHASES.map((p,i)=>G.unlocked.includes(i)?ruleHTML(i,true):lockedHTML(i)).join('')}
-   ${n===3?`<div class="row"><button class="btn primary" data-act="infographic">⬇ BAIXAR INFOGRÁFICO</button><button class="btn" data-act="share">Copiar mensagem para o time</button></div>`:''}
+   ${n===3?`<div class="prizebox"><h3>🏆 CHECKLIST COMPLETO</h3><div class="row"><button class="btn primary" data-act="infographic">⬇ BAIXAR INFOGRÁFICO COMPLETO</button><button class="btn go" data-act="share">📨 Enviar para o time</button><button class="btn" data-act="copyList">Copiar checklist completo</button></div></div>`:''}
    <div class="toast" id="mtoast"></div>
+   <p class="note tip">🎁 Esta janela abre a qualquer momento pelo botão <b>Resgate seu prêmio</b>, na barra superior.</p>
    <div class="row"><button class="btn ghost" data-act="closeModal">Fechar</button></div></div>`);
 }
 function rankBoxHTML(withForm,mode){
@@ -1198,8 +1231,9 @@ function showFinal(){
    <div class="stats"><div class="stat"><span>Pontuação</span><b>${G.score}</b></div><div class="stat"><span>Decisões certas</span><b>${G.decisions}/${Math.max(6,G.decisionsTotal)}</b></div><div class="stat"><span>Boas práticas</span><b>${G.practices}</b></div><div class="stat"><span>Moedas</span><b>${G.coins}</b></div></div>
    <div class="prizebox"><h3>🏆 SEU PRÊMIO COMPLETO</h3>
     <p>Você destravou o checklist das <b>3 regras de ouro</b> para usar IA sem colocar a privacidade em risco. Baixe, copie e compartilhe com o seu time:</p>
-    <div class="row"><button class="btn primary" data-act="infographic">⬇ BAIXAR INFOGRÁFICO</button><button class="btn go" data-act="share">COPIAR MENSAGEM PARA O TIME</button><button class="btn" data-act="copyList">Copiar checklist</button><a class="btn" href="${WEBINAR_URL}" title="${esc(WEBINAR_TITLE)}" target="_blank" rel="noopener">${WEBINAR_BTN}</a></div>
+    <div class="row"><button class="btn primary" data-act="infographic">⬇ BAIXAR INFOGRÁFICO</button><button class="btn go" data-act="share">📨 ENVIAR PARA O TIME</button><button class="btn" data-act="copyList">Copiar checklist</button><a class="btn" href="${WEBINAR_URL}" title="${esc(WEBINAR_TITLE)}" target="_blank" rel="noopener">${WEBINAR_BTN}</a></div>
     <p class="note">📚 ${NEXT_STEPS}</p>
+    ${PRIZE_TIP}
     <div class="toast" id="toast2"></div></div>
    ${rankBoxHTML(NET.role==='guest'?'guest':true,G.np>1?'2P':'1P')}
    <div class="toast" id="toast"></div>
@@ -1264,7 +1298,8 @@ const ACT={
   rules(){showRules();},
   prizes(){showPrizes();},
   copyRule(el){const i=Number(el&&el.dataset.i)||0;copyText(ruleText(i),toastBox(),'Checklist copiado! Cole no canal do seu time.');},
-  infographic(){downloadInfographic();},
+  infographic(el){const i=el&&el.dataset.i!=null?Number(el.dataset.i):null;downloadInfographic(i);},
+  sendRule(el){sendText(friendText(Number(el&&el.dataset.i)||0));},
   ranking(){showRanking();},
   howto(){showHowto();},
   closeModal(){hideModal();},
@@ -1273,7 +1308,7 @@ const ACT={
   toTitle(){hideModal();G.paused=false;showTitle();updatePauseBtn();},
   music(){musicOn=!musicOn;lsSet('jedai-plat-music',musicOn);ensureAudio();if(musGain)musGain.gain.value=musicOn?.55:0;updateAudioBtns();},
   sfx(){sfxOn=!sfxOn;lsSet('jedai-plat-sfx',sfxOn);ensureAudio();if(sfxGain)sfxGain.gain.value=sfxOn?.55:0;updateAudioBtns();},
-  share(){copyText(shareMessage(),toastBox(),'Mensagem copiada! Cole no canal do seu time.');},
+  share(){sendText(shareMessage());},
   copyList(){copyText(checklistText(),toastBox(),'Checklist copiado!');},
   saveRank(){saveRank();}
 };
