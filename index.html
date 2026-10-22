@@ -915,17 +915,22 @@ function drawHUD(){
   if(G.state==='title'||!PL.length)return;
   ctx.setTransform(S,0,0,S,0,0);
   const two=PL.length>1, hx=two?22:4;
+  // fixed slots: 3 base hearts, 1 slot for extra hearts (dotted when empty, "x1"/"x2" when earned), 1 slot for the shield
   for(const p of PL){const y=3+p.i*16;
-    const slots=Math.max(3,p.hearts);for(let i=0;i<slots;i++)tile(i<p.hearts?44:46,hx+i*15,y);
-    if(p.shield){const sx=hx+slots*15+2;ctx.fillStyle='#0a0f22';ctx.beginPath();ctx.moveTo(sx-1,y+1);ctx.lineTo(sx+14,y+1);ctx.lineTo(sx+14,y+8);ctx.lineTo(sx+6.5,y+16);ctx.lineTo(sx-1,y+8);ctx.closePath();ctx.fill();
-      ctx.fillStyle='#8fd3ff';ctx.beginPath();ctx.moveTo(sx+1,y+3);ctx.lineTo(sx+12,y+3);ctx.lineTo(sx+12,y+8);ctx.lineTo(sx+6.5,y+13.5);ctx.lineTo(sx+1,y+8);ctx.closePath();ctx.fill();
-      ctx.fillStyle='#e9f6ff';ctx.fillRect(sx+3,y+5,2,4);}}
-  const cx0=hx+MAXH*15+18;
+    for(let i=0;i<3;i++)tile(i<p.hearts?44:46,hx+i*15,y);
+    const ex=Math.max(0,p.hearts-3),hs=hx+45;
+    if(ex)tile(44,hs,y);else dottedHeart(hs+2,y+4);
+    const sx=hx+80;
+    if(p.shield){ctx.fillStyle='#0a0f22';shieldPath(sx-1,y+1,16,15);ctx.fill();
+      ctx.fillStyle='#8fd3ff';shieldPath(sx+1,y+3,12,11);ctx.fill();ctx.fillStyle='#e9f6ff';ctx.fillRect(sx+3,y+5,2,4);}
+    else{ctx.save();ctx.setLineDash([1.5,1.5]);ctx.strokeStyle='rgba(28,24,60,.9)';ctx.lineWidth=1;shieldPath(sx+.5,y+2.5,13,12.5);ctx.stroke();ctx.restore();}}
+  const cx0=hx+102;
   tile(151,cx0,3);tile(158,cx0+12,3);drawNum(G.coins,cx0+24,3,2);
   tile(67,cx0+54,3);tile(158,cx0+66,3);drawNum(L.phasePractices||0,cx0+78,3,1);
   drawNum(G.score,VW-4-6*10,3,6);
   ctx.setTransform(1,0,0,1,0,0);
   if(two)for(const p of PL)sText(p.i?'2P':'1P',11*S,(12+p.i*16)*S,textPx(5),PCOL[p.i]);
+  for(const p of PL){const ex=Math.max(0,p.hearts-3);if(ex)sText('x'+ex,(hx+63)*S,(12+p.i*16)*S,textPx(6),'#ffb4a8','left');}
   const b=L.boss;
   if(b&&!b.dead&&b.state!=='enter'){
     const w=150*S,x=(VW/2)*S-w/2,y=26*S;
@@ -934,6 +939,9 @@ function drawHUD(){
     for(let i=0;i<b.max;i++){ctx.fillStyle='#0a0f22';ctx.fillRect(x+i*seg,y+8*S,seg-2*S,5*S);ctx.fillStyle=i<b.hp?'#ff5a4a':'#3a2a3a';ctx.fillRect(x+i*seg+S,y+9*S,seg-4*S,3*S);}
   }
 }
+const DOT_HEART=['..XXX...XXX..','.X...X.X...X.','X.....X.....X','X...........X','X...........X','.X.........X.','..X.......X..','...X.....X...','....X...X....','.....X.X.....','......X......'];
+function dottedHeart(x,y){ctx.fillStyle='rgba(28,24,60,.9)';DOT_HEART.forEach((row,r)=>{for(let c=0;c<row.length;c++)if(row[c]==='X'&&(r+c)%2===0)ctx.fillRect(x+c,y+r,1,1);});}
+function shieldPath(x,y,w,h){ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+w,y);ctx.lineTo(x+w,y+h*.47);ctx.lineTo(x+w/2,y+h);ctx.lineTo(x,y+h*.47);ctx.closePath();}
 function drawNum(n,x,y,minDigits){const s=String(Math.max(0,Math.floor(n))).padStart(minDigits,'0');for(let i=0;i<s.length;i++)tile(160+ +s[i],x+i*10,y);}
 
 /* ================= STRIP ================= */
