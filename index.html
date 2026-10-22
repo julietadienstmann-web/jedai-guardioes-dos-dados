@@ -62,6 +62,7 @@ header{width:100%;display:flex;align-items:center;justify-content:space-between;
 .tbtn.down{transform:translateY(4px);box-shadow:0 1px 0 #070b18;filter:brightness(1.25)}
 footer{width:100%;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
 footer span{font-family:var(--pix);font-size:8px;line-height:1.6}
+.note.credit{color:var(--gold);margin-top:6px}
 
 .ov{position:absolute;inset:0;display:none;align-items:center;justify-content:center;padding:14px;background:rgba(6,9,22,.62);overflow:auto;z-index:5}
 .ov.on{display:flex}
@@ -165,7 +166,7 @@ kbd{font-family:var(--pix);font-size:9px;background:#0a0f22;border:2px solid #6f
   </div>
 
   <footer>
-    <span>MISSÃO IA RESPONSÁVEL · 3 PLANETAS · 3 REGRAS DE OURO</span>
+    <span id="creditLine"></span>
     <span>Arte: Kenney.nl (CC0) · <a id="webinarLink" href="#" target="_blank" rel="noopener">Assistir ao webinar ↗</a></span>
   </footer>
 </div>
@@ -179,11 +180,15 @@ const SRC_BGS='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAABIBAMAAABSEee
 
 /* ================= CONTENT ================= */
 const WEBINAR_TITLE='Inovação com Responsabilidade: Como utilizar a IA no trabalho sem colocar a privacidade em risco';
+const WEBINAR_NAME='Inovação com Responsabilidade';
+const CREDIT='Produzido com IA pela Aspirante Julieta Scheidt Dienstmann';
+const WEBINAR_BTN=`Assistir ao webinar “${WEBINAR_NAME}” ↗`;
 const WEBINAR_URL='https://unit.edusense.app/#/player/4497?trail_id=1138&lesson_id=48110&viewall=true';
 const ANPD_URL='https://www.gov.br/anpd/pt-br/assuntos/titular-de-dados';
 // Ranking do time: URL do app da Web do Apps Script (termina em /exec). Vazio = ranking só neste navegador.
 const RANK_URL='https://script.google.com/macros/s/AKfycbxBpC-apHw1BoIptleq9de8wXGhKUXUlnP7KxL_zBusUILdKwG3bThr3PlkTP0bu_aM/exec';
-document.getElementById('webinarLink').href=WEBINAR_URL;
+{const w=document.getElementById('webinarLink');w.href=WEBINAR_URL;w.textContent=WEBINAR_BTN;w.title=WEBINAR_TITLE;}
+document.getElementById('creditLine').textContent=CREDIT;
 
 const PHASES=[
  {name:'Floresta dos dados expostos',planet:'PLANETA 01',theme:'green',boss:'O Vazador de Dados',
@@ -289,7 +294,7 @@ const THEMES={
  desert:{bg:4,band:[12,13],top:{s:60,l:61,m:62,r:63},flo:{s:40,l:41,m:42,r:43},fill:122,brick:26,water:false,accent:'#ffc857',music:-3,sky:['#ff9c5a','#ffe0a3']},
  snow:{bg:0,band:[8,9,10,11],top:{s:100,l:101,m:102,r:103},flo:{s:80,l:81,m:82,r:83},fill:122,brick:6,water:true,accent:'#9fd8ff',music:2,sky:['#7aa6dc','#e3f2ff']}
 };
-const PCOL=['#a4e56f','#ff9ad5'], PSPR=[0,4], MAXH=5, GLIDE=.75;
+const PCOL=['#a4e56f','#ff9ad5'], PSPR=[0,4], MAXH=5, GLIDE=.75, AIRJ=1;
 const REDUCED=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const IM={};
 function loadImg(src){return new Promise(res=>{const i=new Image();i.onload=()=>res(i);i.onerror=()=>res(i);i.src=src;});}
@@ -453,7 +458,7 @@ function moveY(e,dy,who){
 function overlap(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y;}
 
 /* ================= PLAYERS ================= */
-function newPlayer(i,x,y){return {i,x,y,w:12,h:18,vx:0,vy:0,face:1,onGround:false,coyote:0,jumpBuf:0,inv:0,shield:false,hearts:3,glide:GLIDE,puff:0,
+function newPlayer(i,x,y){return {i,x,y,w:12,h:18,vx:0,vy:0,face:1,onGround:false,coyote:0,jumpBuf:0,inv:0,shield:false,hearts:3,glide:GLIDE,airJumps:AIRJ,puff:0,
   anim:0,dead:false,deadT:0,ghost:false,ghostT:0,stand:null,prevBottom:y+18,combo:0};}
 function activePlayers(){return PL.filter(p=>!p.dead&&!p.ghost);}
 function partnerOf(p){return PL.find(q=>q!==p&&!q.dead&&!q.ghost&&q.hearts>0);}
@@ -477,20 +482,20 @@ function updatePlayer(p,dt){
   else{const dec=p.onGround?900:180;if(Math.abs(p.vx)<=dec*dt)p.vx=0;else p.vx-=Math.sign(p.vx)*dec*dt;}
   p.jumpBuf=Math.max(0,p.jumpBuf-dt);p.coyote=Math.max(0,p.coyote-dt);
   if(p.jumpBuf>0&&(p.onGround||p.coyote>0)){p.vy=-(332+Math.abs(p.vx)*.34);p.onGround=false;p.coyote=0;p.jumpBuf=0;p.stand=null;SFX.jump();}
+  else if(p.jumpBuf>0&&!p.onGround&&p.airJumps>0){p.vy=-310;p.airJumps--;p.jumpBuf=0;p.stand=null;p.glideSnd=false;SFX.jump();}
   const g=(p.vy<0&&inp.jump)?900:1750;p.vy=Math.min(420,p.vy+g*dt);
   p.gliding=false;
   if(!p.onGround&&p.vy>0&&inp.jump&&p.glide>0){p.vy=Math.min(p.vy,65);p.glide-=dt;p.gliding=true;
-    p.puff-=dt;if(p.puff<=0){p.puff=.07;L.parts.push({kind:'p',x:p.x+p.w/2+(Math.random()-.5)*6,y:p.y+p.h,vx:(Math.random()-.5)*20,vy:40,t:.35,color:p.glide<.35?'#ff9c5a':'#bfe8ff'});}
     if(!p.glideSnd){p.glideSnd=true;tone(520,.25,'triangle',.06,-200);}}
   if(p.stand)moveX(p,p.stand.dx);
   if(moveX(p,p.vx*dt))p.vx=0;
   p.prevBottom=p.y+p.h;
   const res=moveY(p,p.vy*dt,p);
   const was=p.onGround;p.onGround=false;
-  if(res==='down'){p.vy=0;p.onGround=true;p.combo=0;p.glide=GLIDE;p.glideSnd=false;}
+  if(res==='down'){p.vy=0;p.onGround=true;p.combo=0;p.glide=GLIDE;p.airJumps=AIRJ;p.glideSnd=false;}
   else if(res==='up'){p.vy=Math.max(p.vy,40);}
   p.stand=null;
-  for(const m of L.movers){if(p.vy>=0&&p.prevBottom<=m.y+1&&p.y+p.h>=m.y&&p.x+p.w>m.x&&p.x<m.x+m.w){p.y=m.y-p.h;p.vy=0;p.onGround=true;p.stand=m;p.combo=0;p.glide=GLIDE;p.glideSnd=false;}}
+  for(const m of L.movers){if(p.vy>=0&&p.prevBottom<=m.y+1&&p.y+p.h>=m.y&&p.x+p.w>m.x&&p.x<m.x+m.w){p.y=m.y-p.h;p.vy=0;p.onGround=true;p.stand=m;p.combo=0;p.glide=GLIDE;p.airJumps=AIRJ;p.glideSnd=false;}}
   if(was&&!p.onGround&&p.vy>=0)p.coyote=.08;
   for(const s of L.springs){if(p.vy>0&&p.x+p.w>s.x+3&&p.x<s.x+15&&p.y+p.h>=s.y+8&&p.prevBottom<=s.y+10){p.y=s.y+8-p.h;p.vy=inp.jump?-540:-430;s.t=.25;p.onGround=false;SFX.spring();}}
   if(p.x<0)p.x=0;
@@ -517,7 +522,7 @@ function fall(p){
   p.vx=0;p.vy=0;p.inv=1.6;
   flash('bad','CAIU NO BURACO','Você perdeu 1 coração e voltou para a última bandeira.',3);
 }
-function revive(p,q){p.ghost=false;p.hearts=2;p.inv=2;p.x=q.x;p.y=q.y-4;p.vx=0;p.vy=-240;p.onGround=false;p.glide=GLIDE;SFX.power();burst(p.x+6,p.y+9,'#ffffff',16);
+function revive(p,q){p.ghost=false;p.hearts=2;p.inv=2;p.x=q.x;p.y=q.y-4;p.vx=0;p.vy=-240;p.onGround=false;p.glide=GLIDE;p.airJumps=AIRJ;SFX.power();burst(p.x+6,p.y+9,'#ffffff',16);
   flash('ok',`JOGADOR ${p.i+1} RESGATADO!`,`O Jogador ${q.i+1} estourou a bolha. O parceiro voltou com 2 corações.`,3.5);}
 function knockOut(p){
   const q=partnerOf(p);
@@ -1010,7 +1015,7 @@ function controlsHTML(){
     <div class="box do"><h4>JOGADOR 1 · VERDE</h4><kbd>A</kbd><kbd>D</kbd> andar · <kbd>W</kbd> ou <kbd>ESPAÇO</kbd> pular · <kbd>SHIFT</kbd> esquerdo correr</div>
     <div class="box p2"><h4>JOGADOR 2 · ROSA</h4><kbd>←</kbd><kbd>→</kbd> andar · <kbd>↑</kbd> pular · <kbd>SHIFT</kbd> direito ou <kbd>L</kbd> correr</div></div>
     <p class="keys">Controles de videogame (USB ou Bluetooth) também funcionam: o primeiro controle é o Jogador 1. Se alguém perder todos os corações, vira uma bolha: o parceiro encosta nela para resgatar (ou ativa a próxima bandeira). Se os dois caírem, a fase recomeça.</p>`;
-  return `<p class="keys"><kbd>←</kbd><kbd>→</kbd> ou <kbd>A</kbd><kbd>D</kbd> andar · <kbd>ESPAÇO</kbd> pular (segure para ir mais alto e, na descida, planar) · <kbd>SHIFT</kbd> correr · <kbd>P</kbd> pausar<br>No celular: use os botões abaixo do jogo. Controle de videogame também funciona.</p>`;
+  return `<p class="keys"><kbd>←</kbd><kbd>→</kbd> ou <kbd>A</kbd><kbd>D</kbd> andar · <kbd>ESPAÇO</kbd> pular (no ar, aperte de novo para o pulo duplo; segure na descida para planar) · <kbd>SHIFT</kbd> correr · <kbd>P</kbd> pausar<br>No celular: use os botões abaixo do jogo. Controle de videogame também funciona.</p>`;
 }
 function showTitle(){
   G.ovKey='title';G.state='title';L=buildLevel(0);PL=[];cam=0;camLock=null;setAccent();stopMusic();G.msg=null;
@@ -1022,7 +1027,8 @@ function showTitle(){
     <div class="row"><button class="btn primary blink" data-act="start1">▶ 1 JOGADOR</button>
     <button class="btn go" data-act="online">◎ 2 ONLINE</button></div>
     <div class="row"><button class="btn ghost" data-act="rules">Ver as 3 regras de ouro · 1 min</button><button class="btn ghost" data-act="ranking">Ranking</button></div>
-    <p class="note">2 online: cada pessoa no seu computador, entrando com um código de sala.</p></div>`,'rgba(6,9,22,.35)');
+    <p class="note">2 online: cada pessoa no seu computador, entrando com um código de sala.</p>
+    <p class="note credit">${CREDIT}</p></div>`,'rgba(6,9,22,.35)');
 }
 function showIntro(){
   G.ovKey='intro';
@@ -1036,7 +1042,7 @@ function showIntro(){
     <div>${iconCanvas('t',9)}<span><b>Blocos A/B</b>: leia a situação abaixo do jogo e bata no bloco certo. Só vale uma batida.</span></div>
     <div>${iconCanvas('t',111)}<span><b>Bandeira</b>: encoste para salvar o progresso. Se cair, volta para ela.</span></div>
     <div>${iconCanvas('t',44)}<span><b>Corações</b>: começa com 3. Blocos e boas práticas dão mais, até 5.</span></div>
-    <div>${iconCanvas('c',PSPR[0])}<span><b>Planar</b>: no ar, continue segurando PULAR. O propulsor do traje segura a queda por um instante. Ótimo para rios longos!</span></div>
+    <div>${iconCanvas('c',PSPR[0])}<span><b>Pulo duplo e planar</b>: no ar, aperte PULAR de novo para subir mais. Na descida, segure PULAR para cair devagar. Ótimo para rios longos e chefões!</span></div>
    </div>
    ${controlsHTML()}
    <div class="row"><button class="btn primary" data-act="toBrief">BORA! ▶</button><button class="btn ghost" data-act="toTitle">← Voltar ao início</button></div></div>`);
@@ -1102,14 +1108,14 @@ function showFinal(){
    ${rankBoxHTML(true)}
    <div class="toast" id="toast"></div>
    ${rulesHTML()}
-   <div class="row"><button class="btn primary" data-act="share">COMPARTILHAR COM O TIME</button><a class="btn" href="${WEBINAR_URL}" target="_blank" rel="noopener">Assistir ao webinar ↗</a><button class="btn ghost" data-act="again">↻ Jogar novamente</button></div>
-   <div class="toast" id="toast2"></div></div>`);
+   <div class="row"><button class="btn primary" data-act="share">COMPARTILHAR COM O TIME</button><a class="btn" href="${WEBINAR_URL}" title="${esc(WEBINAR_TITLE)}" target="_blank" rel="noopener">${WEBINAR_BTN}</a><button class="btn ghost" data-act="again">↻ Jogar novamente</button></div>
+   <div class="toast" id="toast2"></div><p class="note credit">${CREDIT}</p></div>`);
 }
 function showRules(){
   showModal(`<div class="card wide"><p class="kicker">SEU CHECKLIST · ${G.unlocked.length}/3 LIBERADAS NO JOGO</p><h2>3 regras de ouro para usar IA com responsabilidade</h2>
    ${rulesHTML()}
    <p style="font-size:13px;color:var(--muted)">Na dúvida, siga as políticas de privacidade e segurança da informação da TOTVS. Referência: <a href="${ANPD_URL}" target="_blank" rel="noopener">ANPD · direitos do titular</a>.</p>
-   <div class="row"><button class="btn primary" data-act="share">Compartilhar com o time</button><button class="btn" data-act="copyList">Copiar só o checklist</button><a class="btn" href="${WEBINAR_URL}" target="_blank" rel="noopener">Assistir ao webinar ↗</a><button class="btn ghost" data-act="closeModal">Fechar</button></div>
+   <div class="row"><button class="btn primary" data-act="share">Compartilhar com o time</button><button class="btn" data-act="copyList">Copiar só o checklist</button><a class="btn" href="${WEBINAR_URL}" title="${esc(WEBINAR_TITLE)}" target="_blank" rel="noopener">${WEBINAR_BTN}</a><button class="btn ghost" data-act="closeModal">Fechar</button></div>
    <div class="toast" id="mtoast"></div></div>`);
 }
 function showRanking(){
@@ -1128,7 +1134,7 @@ function showHowto(){
     <div>${iconCanvas('t',10)}<span><b>Bloco !</b> libera uma boa prática (+100). A cada 3 na fase: escudo de privacidade ou +1 coração.</span></div>
     <div>${iconCanvas('t',9)}<span><b>Blocos A/B</b>: leia a situação abaixo do jogo e bata uma vez no bloco certo (+300). Depois, os blocos mostram ✓ CERTA e ✗ ERRADA, e o errado solta um risco.</span></div>
     <div>${iconCanvas('t',111)}<span><b>Bandeira</b>: encoste para ativar (ela tremula). Se cair num buraco, você volta para ela e perde só 1 coração.</span></div>
-    <div>${iconCanvas('c',0)}<span><b>Planar</b>: segure PULAR durante a queda e o propulsor do traje segura você por um instante. Recarrega ao tocar o chão.</span></div>
+    <div>${iconCanvas('c',0)}<span><b>Pulo duplo e planar</b>: no ar, aperte PULAR de novo para subir mais; na queda, segure PULAR para cair devagar. Os dois recarregam ao tocar o chão.</span></div>
     <div>${iconCanvas('t',44)}<span><b>Corações</b>: começa com 3; o coração que sai do bloco (corra atrás e encoste) e cada trio de boas práticas dão mais, até 5.</span></div>
     <div>${iconCanvas('c',21)}<span><b>Chefão</b> no fim de cada planeta. Vencer libera uma regra de ouro do checklist.</span></div>
    </div>
