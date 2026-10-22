@@ -1012,10 +1012,9 @@ function showTitle(){
     <div class="subtitle">GUARDIÕES DOS DADOS</div>
     <p class="tagline">Atravesse 3 planetas, derrote os maus hábitos e libere as 3 regras de ouro para usar IA no trabalho com segurança.</p>
     <div class="row"><button class="btn primary blink" data-act="start1">▶ 1 JOGADOR</button>
-    <button class="btn duo" data-act="start2">▶▶ 2 NO MESMO PC</button>
     <button class="btn go" data-act="online">◎ 2 ONLINE</button></div>
     <div class="row"><button class="btn ghost" data-act="rules">Ver as 3 regras de ouro · 1 min</button><button class="btn ghost" data-act="ranking">Ranking</button></div>
-    <p class="note">2 no mesmo PC: dividindo o teclado ou com 2 controles. 2 online: cada pessoa no seu computador, entrando com um código de sala.</p></div>`,'rgba(6,9,22,.35)');
+    <p class="note">2 online: cada pessoa no seu computador, entrando com um código de sala.</p></div>`,'rgba(6,9,22,.35)');
 }
 function showIntro(){
   G.ovKey='intro';
@@ -1302,12 +1301,12 @@ function showOnline(){
   if(!ROOM&&window.claude&&typeof window.claude.use==='function'){showModal(`<div class="card"><p class="kicker">2 JOGADORES ONLINE</p><h2>Conectando…</h2><p>Ainda estou ligando o modo online. Tente de novo em alguns segundos.</p><div class="row"><button class="btn primary" data-act="closeModal">OK</button></div></div>`);return;}
   if(!ROOM){showModal(`<div class="card"><p class="kicker">2 JOGADORES ONLINE</p><h2>Sem conexão para o modo online</h2>
     <p>Não consegui carregar a peça que liga os dois computadores. Confira se você está com internet e recarregue a página. Algumas redes de empresa bloqueiam esse tipo de conexão.</p>
-    <p>Para jogar em dupla agora, use <b>2 no mesmo PC</b>.</p><div class="row"><button class="btn primary" data-act="closeModal">Entendi</button></div></div>`);return;}
+    <p>Enquanto isso, você pode jogar no modo <b>1 JOGADOR</b>.</p><div class="row"><button class="btn primary" data-act="closeModal">Entendi</button></div></div>`);return;}
   showModal(`<div class="card"><p class="kicker">2 JOGADORES ONLINE</p><h2>Cada um no seu computador</h2>
     <p>Uma pessoa cria a sala e recebe um código de 4 letras. A outra abre este mesmo link e digita o código.</p>
     <div class="cols"><div class="box do"><h4>VOCÊ CONVIDA (ASTRONAUTA VERDE)</h4><p style="font-size:14px">Seu computador comanda a partida.</p><button class="btn go" data-act="netCreate">CRIAR SALA</button></div>
     <div class="box p2"><h4>VOCÊ FOI CONVIDADO (ROSA)</h4><div class="rankform"><input id="joinCode" maxlength="4" placeholder="CÓDIGO" aria-label="Código da sala" style="text-transform:uppercase;font-family:var(--pix);letter-spacing:4px"><button class="btn duo" data-act="netJoin">ENTRAR</button></div></div></div>
-    <p class="note">As duas pessoas precisam estar com internet. Algumas redes de empresa ou VPNs bloqueiam a conexão direta entre computadores; se não conectar, tentem outra rede (por exemplo, o celular como roteador) ou usem 2 no mesmo PC. No online não existe pausa. Controles: setas ou A/D, ESPAÇO para pular, SHIFT para correr (no celular, os botões da tela).</p>
+    <p class="note">As duas pessoas precisam estar com internet. Algumas redes de empresa ou VPNs bloqueiam a conexão direta entre computadores; se não conectar, tentem outra rede (por exemplo, o celular como roteador) ou joguem no modo 1 JOGADOR. No online não existe pausa. Controles: setas ou A/D, ESPAÇO para pular, SHIFT para correr (no celular, os botões da tela).</p>
     <div class="toast" id="netMsg"></div>
     <div class="row"><button class="btn ghost" data-act="closeModal">Voltar</button></div></div>`);
 }
@@ -1317,7 +1316,7 @@ async function netCreate(){
   let err=null;
   for(let i=0;i<3;i++){try{NET.code=genCode();NET.room=await ROOM.join('jedai-'+NET.code.toLowerCase(),{host:true});err=null;break;}catch(e){err=e;if(!e||e.code!=='taken')break;}}
   NET.busy=false;
-  if(err){if(msg)msg.textContent='Não consegui criar a sala. Confira sua internet e tente de novo. Se continuar, a rede pode estar bloqueando: usem 2 no mesmo PC.';return;}
+  if(err){if(msg)msg.textContent='Não consegui criar a sala. Confira sua internet e tente de novo. Se continuar, a rede pode estar bloqueando: joguem no modo 1 JOGADOR.';return;}
   NET.role='host';NET.hadPartner=false;NET.q=[];
   NET.room.presence({role:'host',s:null}).catch(()=>{});
   NET.room.on('menu',m=>{if(m.isMe||!m.data)return;const a=m.data.a;
@@ -1338,7 +1337,7 @@ async function netJoin(){
   if(!/^[A-Z]{4}$/.test(code)){if(msg)msg.textContent='Digite o código de 4 letras que o seu parceiro recebeu.';if(inp)inp.focus();return;}
   if(NET.busy)return;NET.busy=true;if(msg)msg.textContent='⏳ Conectando…';
   try{NET.code=code;NET.room=await ROOM.join('jedai-'+code.toLowerCase(),{host:false});}
-  catch(e){NET.busy=false;if(msg)msg.textContent='Não consegui entrar. Confira sua internet e tente de novo. Se continuar, a rede pode estar bloqueando: usem 2 no mesmo PC.';return;}
+  catch(e){NET.busy=false;if(msg)msg.textContent='Não consegui entrar. Confira sua internet e tente de novo. Se continuar, a rede pode estar bloqueando: joguem no modo 1 JOGADOR.';return;}
   NET.busy=false;
   NET.role='guest';G.ovKey='joining';NET.everHost=false;NET.waitShown=false;NET.hostPres=null;NET.hostSeen=performance.now();NET.joinedAt=performance.now();NET.jc=0;G.np=2;
   NET.room.presence({role:'guest',in:[0,0,0,0,0]}).catch(()=>{});
