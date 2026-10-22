@@ -1018,7 +1018,7 @@ function showTitle(){
 }
 function showIntro(){
   G.ovKey='intro';
-  showOv(`<div class="card wide"><p class="kicker">TRANSMISSÃO DA BASE · ${G.np>1?'MODO DUPLA':'MODO SOLO'}</p><h2>${G.np>1?'Guardiões, precisamos de vocês.':'Guardião, precisamos de você.'}</h2>
+  showOv(`<div class="card wide"><p class="kicker">JEDAI · GUARDIÕES DOS DADOS · ${G.np>1?'MODO DUPLA ONLINE':'MODO SOLO'}</p><h2>Como jogar</h2>
    <p>A IA ajuda a escrever, resumir e criar. Mas levar informações para o lugar errado pode expor pessoas e a TOTVS. Nome, telefone, CPF e outros dados que identificam alguém são <b>dados pessoais</b>, protegidos pela LGPD e pelas políticas de privacidade da TOTVS.</p>
    <div class="legend">
     <div>${iconCanvas('c',18)}<span><b>Riscos</b>: pule na cabeça para derrotar.</span></div>
@@ -1031,7 +1031,7 @@ function showIntro(){
     <div>${iconCanvas('c',PSPR[0])}<span><b>Planar</b>: no ar, continue segurando PULAR. O propulsor do traje segura a queda por um instante. Ótimo para rios longos!</span></div>
    </div>
    ${controlsHTML()}
-   <div class="row"><button class="btn primary" data-act="toBrief">BORA! ▶</button></div></div>`);
+   <div class="row"><button class="btn primary" data-act="toBrief">BORA! ▶</button><button class="btn ghost" data-act="toTitle">← Voltar ao início</button></div></div>`);
 }
 function showBrief(i){
   G.ovKey='brief'+i;
