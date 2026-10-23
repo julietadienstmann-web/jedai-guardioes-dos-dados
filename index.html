@@ -1363,10 +1363,17 @@ const MAP2={KeyA:[0,'left'],KeyD:[0,'right'],KeyW:[0,'jump'],Space:[0,'jump'],Sh
   ArrowLeft:[1,'left'],ArrowRight:[1,'right'],ArrowUp:[1,'jump'],ShiftRight:[1,'run'],KeyL:[1,'run'],Slash:[1,'run'],Numpad0:[1,'run'],ControlRight:[1,'run']};
 function keyTarget(code){return (G.np>1&&!NET.role?MAP2:MAP1)[code];}
 addEventListener('keydown',e=>{
-  if(e.target&&e.target.tagName==='INPUT'){if(e.key==='Enter'){if(e.target.id==='joinCode')netJoin();else saveRank();}return;}
+  if(e.target&&e.target.tagName==='INPUT'&&e.key!=='Tab'){if(e.key==='Enter'){if(e.target.id==='joinCode')netJoin();else saveRank();}return;}
   if(e.target&&e.target.tagName==='TEXTAREA')return;
   if(e.code==='KeyP'||e.code==='Escape'){if(modal.classList.contains('on'))hideModal();else ACT.pause();e.preventDefault();return;}
   if(e.code==='KeyS'&&G.ovKey!=='title'){showQuit();e.preventDefault();return;}
+  // on screens and windows, the arrow keys move between the buttons (Enter or SPACE presses the selected one)
+  if(/^Arrow/.test(e.key)||e.key==='Tab'){const box=visibleBox();
+    if(box){const items=[...box.querySelectorAll('button:not([disabled]),a.btn,input')].filter(el=>el.offsetParent!==null);
+      if(items.length){const i=items.indexOf(document.activeElement);
+        if(i<0)(box.querySelector('.primary:not([disabled]),.go:not([disabled])')||items[0]).focus({preventScroll:false});
+        else items[(i+((e.key==='Tab'?!e.shiftKey:(e.key==='ArrowRight'||e.key==='ArrowDown'))?1:-1)+items.length)%items.length].focus();
+        clearKeys();e.preventDefault();return;}}}
   if(e.key==='Enter'){const box=visibleBox();if(box){const b=box.querySelector('.primary,.go');if(b&&!b.disabled&&(document.activeElement===document.body||!box.contains(document.activeElement))){b.click();e.preventDefault();return;}}}
   const k=keyTarget(e.code);if(!k)return;
   if(visibleBox()&&e.code==='Space'&&document.activeElement&&document.activeElement.tagName==='BUTTON')return;
