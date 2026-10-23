@@ -358,6 +358,8 @@ const SFX={
 function nf(n){const m={C:0,'C#':1,D:2,'D#':3,E:4,F:5,'F#':6,G:7,'G#':8,A:9,'A#':10,B:11};const r=/^([A-G]#?)(\d)$/.exec(n);return 12*(+r[2]+1)+m[r[1]];}
 function seq(str){return str.trim().split(/\s+/).map(t=>{const [n,d]=t.split(':');return [n==='-'?0:nf(n),+d];});}
 const SONGS={
+ victory:{bpm:150,lead:seq('G4:1 C5:1 E5:1 G5:1 C6:2 G5:1 C6:1 E6:4 -:2 D6:1 C6:1 B5:1 C6:1 D6:2 G5:2 A5:1 B5:1 C6:1 D6:1 E6:2 D6:1 C6:1 B5:1 G5:1 A5:1 B5:1 C6:4 -:2'),
+       bass:seq('C3:2 G3:2 C3:2 G3:2 C3:2 G3:2 C3:2 E3:2 G2:2 D3:2 G2:2 D3:2 F2:2 C3:2 G2:2 B2:2 C3:2 G3:2 C3:4')},
  main:{bpm:148,lead:seq('C5:1 E5:1 G5:1 E5:1 A5:2 G5:2 F5:1 E5:1 D5:1 C5:1 D5:2 G4:2 C5:1 E5:1 G5:1 C6:1 B5:2 G5:2 A5:1 G5:1 F5:1 D5:1 C5:4 E5:1 E5:1 -:1 C5:1 E5:2 G5:2 F5:1 F5:1 -:1 D5:1 F5:2 A5:2 G5:1 E5:1 C5:1 E5:1 D5:1 B4:1 G4:2 C5:2 G4:1 A4:1 C5:4'),
        bass:seq('C3:2 G3:2 C3:2 G3:2 F2:2 C3:2 G2:2 B2:2 C3:2 G3:2 E3:2 G3:2 F2:2 G2:2 C3:4 C3:2 G3:2 C3:2 G3:2 D3:2 A3:2 D3:2 A3:2 C3:2 G3:2 G2:2 B2:2 C3:2 G2:2 C3:4')},
  boss:{bpm:172,lead:seq('A4:1 C5:1 E5:1 A5:1 G5:1 E5:1 C5:1 E5:1 F5:1 E5:1 D5:1 C5:1 B4:2 E5:2 A4:1 C5:1 E5:1 A5:1 B5:1 A5:1 G5:1 E5:1 F5:1 D5:1 B4:1 G#4:1 A4:4'),
@@ -705,7 +707,7 @@ function updateBoss(dt){
     if(b.deadT>1.3&&!b.gone){b.gone=true;burst(b.x+b.w/2,b.y+b.h/2,'#ffffff',30);shake(.4);
       const mid=Math.max(b.left+60,Math.min(b.right-60,b.x+b.w/2));
       for(let i=0;i<8;i++)L.items.push({kind:'coin',id:L.nid++,bossCoin:true,x:mid-5+(i-3.5)*14,y:b.ground-34-(i%2)*16,w:10,h:12});
-      banner('PEGUE AS MOEDAS!','Depois aparece o prêmio da fase.','#ffd25e',3);}
+      banner('PEGUE AS MOEDAS!','Depois aparece o prêmio da fase.','#ffd25e',3);playMusic('victory',0);}
     if(b.gone&&G.state==='bossdead'){
       if(!L.items.some(i=>i.bossCoin)){b.doneT=(b.doneT||0)+dt;if(b.doneT>.9){G.state='won';showWon();}}
       else if(b.deadT>12){G.state='won';showWon();}}
@@ -1140,7 +1142,7 @@ function launch(){
 }
 function showWon(){
   G.ovKey='won';
-  G.msg=null;const ph=L.ph;if(!G.unlocked.includes(L.pi))G.unlocked.push(L.pi);G.prizeNew=true;updateRulesBtn();SFX.win();
+  G.msg=null;stopMusic();const ph=L.ph;if(!G.unlocked.includes(L.pi))G.unlocked.push(L.pi);G.prizeNew=true;updateRulesBtn();SFX.win();
   const last=L.pi===2;
   showOv(`<div class="card wide"><p class="kicker">CHEFÃO DERROTADO · ${ph.planet} · PRÊMIO ${G.unlocked.length}/3</p><h2>🎁 Parabéns! Seu prêmio: o checklist “${ph.rule}”</h2>
    <p>Você venceu <b>${ph.boss}</b> e concluiu <b>${ph.name}</b>. Este é o seu checklist do que fazer e do que evitar neste tema:</p>
