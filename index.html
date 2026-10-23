@@ -1147,10 +1147,14 @@ function showWon(){
    <div class="cols"><div class="box do"><h4>✓ FAÇA</h4>${ulHTML(ph.list.do)}</div><div class="box avoid"><h4>✗ EVITE</h4>${ulHTML(ph.list.avoid)}</div></div>
    <div class="box why"><h4>POR QUE IMPORTA</h4>${ph.detail}</div>
    ${prizeActions(L.pi)}
+   ${last?`<div class="prizebox"><h3>🏆 MISSÃO COMPLETA: AS 3 REGRAS DE OURO</h3>
+    <p>Você destravou os 3 checklists. Agora leve o <b>checklist completo</b> para o seu time:</p>
+    <div class="row"><button class="btn primary" data-act="infographic">⬇ INFOGRÁFICO COMPLETO</button><button class="btn go" data-act="share">📨 ENVIAR PARA O TIME</button><button class="btn" data-act="copyList">Copiar checklist completo</button><a class="btn" href="${WEBINAR_URL}" title="${esc(WEBINAR_TITLE)}" target="_blank" rel="noopener">${WEBINAR_BTN}</a></div>
+    <p class="note">📚 ${NEXT_STEPS}</p></div>`:''}
    <div class="toast" id="ptoast"></div>
    ${PRIZE_TIP}
    <div class="stats"><div class="stat"><span>Pontos</span><b>${G.score}</b></div><div class="stat"><span>Boas práticas na fase</span><b>${L.phasePractices}</b></div><div class="stat"><span>Prêmios</span><b>${G.unlocked.length}/3</b></div></div>
-   <div class="row"><button class="btn primary" data-act="${last?'final':'nextPhase'}">${last?'▶ VER RESULTADO':'▶ PRÓXIMO PLANETA'}</button></div></div>`);
+   <div class="row"><button class="btn primary" data-act="${last?'final':'nextPhase'}">${last?'▶ COLOCAR MEU NOME NO RANKING':'▶ PRÓXIMO PLANETA'}</button></div></div>`);
 }
 function showLost(){
   G.ovKey='lost';
@@ -1262,15 +1266,10 @@ function showFinal(){
   G.state='final';stopMusic();G.msg=null;G.rankSaved=false;fetchSheetRank(true);G.prizeNew=false;updateRulesBtn();
   showOv(`<div class="card wide"><p class="kicker">MISSÃO CUMPRIDA · ${G.np>1?'MODO DUPLA':'MODO SOLO'}</p><h2>${G.np>1?'Vocês são Guardiões dos Dados!':'Você é um Guardião dos Dados!'}</h2>
    <div class="stats"><div class="stat"><span>Pontuação</span><b>${G.score}</b></div><div class="stat"><span>Decisões certas</span><b>${G.decisions}/${Math.max(6,G.decisionsTotal)}</b></div><div class="stat"><span>Boas práticas</span><b>${G.practices}</b></div><div class="stat"><span>Moedas</span><b>${G.coins}</b></div></div>
-   <div class="prizebox"><h3>🏆 SEU PRÊMIO COMPLETO</h3>
-    <p>Você destravou o checklist das <b>3 regras de ouro</b> para usar IA sem colocar a privacidade em risco. Baixe, copie e compartilhe com o seu time:</p>
-    <div class="row"><button class="btn primary" data-act="infographic">⬇ BAIXAR INFOGRÁFICO</button><button class="btn go" data-act="share">📨 ENVIAR PARA O TIME</button><button class="btn" data-act="copyList">Copiar checklist</button><a class="btn" href="${WEBINAR_URL}" title="${esc(WEBINAR_TITLE)}" target="_blank" rel="noopener">${WEBINAR_BTN}</a></div>
-    <p class="note">📚 ${NEXT_STEPS}</p>
-    ${PRIZE_TIP}
-    <div class="toast" id="toast2"></div></div>
+   <p class="lead">${G.np>1?'Coloquem os apelidos da dupla':'Coloque seu apelido'} na galeria dos maiores pontuadores do jogo:</p>
    ${rankBoxHTML(NET.role==='guest'?'guest':true,G.np>1?'2P':'1P')}
    <div class="toast" id="toast"></div>
-   <details class="allrules"><summary>Ver o checklist completo aqui</summary>${rulesHTML()}</details>
+   ${PRIZE_TIP}
    <div class="row"><button class="btn ghost" data-act="again">↻ Jogar novamente</button></div>
    <p class="note credit">${CREDIT}</p></div>`);
 }
@@ -1284,7 +1283,7 @@ function showRules(){
 function showRanking(){
   fetchSheetRank(true);
   showModal(`<div class="card wide"><p class="kicker">PONTUAÇÃO</p><h2>Ranking</h2>
-   <p>${sharedRank?'Este ranking é compartilhado: todo mundo que joga por este link aparece aqui, com o melhor resultado de cada apelido. Solo e duplas têm rankings separados.':(RANK_URL?'Carregando o ranking do time… Se não aparecer, a lista abaixo é só deste navegador.':'Por enquanto, o ranking fica salvo só neste navegador.')}</p>
+   <p>${sharedRank?'Conheça o ranking dos maiores pontuadores individuais e em duplas do jogo. Complete a missão e coloque seu nome nessa galeria.':(RANK_URL?'Carregando o ranking do time… Se não aparecer, a lista abaixo é só deste navegador.':'Por enquanto, o ranking fica salvo só neste navegador.')}</p>
    <div class="cols">${rankBoxHTML(false,'1P')}${rankBoxHTML(false,'2P')}</div>
    <div class="row"><button class="btn primary" data-act="closeModal">Fechar</button></div></div>`);
 }
