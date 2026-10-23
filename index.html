@@ -1091,7 +1091,7 @@ function controlsHTML(){
     <div class="box do"><h4>JOGADOR 1 · VERDE</h4><kbd>A</kbd><kbd>D</kbd> andar · <kbd>W</kbd> ou <kbd>ESPAÇO</kbd> pular · <kbd>SHIFT</kbd> esquerdo correr</div>
     <div class="box p2"><h4>JOGADOR 2 · ROSA</h4><kbd>←</kbd><kbd>→</kbd> andar · <kbd>↑</kbd> pular · <kbd>SHIFT</kbd> direito ou <kbd>L</kbd> correr</div></div>
     <p class="keys">Controles de videogame (USB ou Bluetooth) também funcionam: o primeiro controle é o Jogador 1. Se alguém perder todos os corações, vira uma bolha: o parceiro encosta nela para resgatar (ou ativa a próxima bandeira). Se os dois caírem, a fase recomeça.</p>`;
-  return `<p class="keys"><kbd>←</kbd><kbd>→</kbd> ou <kbd>A</kbd><kbd>D</kbd> andar · <kbd>ESPAÇO</kbd> pular (no ar, aperte de novo para o pulo duplo; segure na descida para planar) · <kbd>SHIFT</kbd> correr · <kbd>P</kbd> pausar<br>No celular: use os botões abaixo do jogo. Controle de videogame também funciona.</p>`;
+  return `<p class="keys"><kbd>←</kbd><kbd>→</kbd> ou <kbd>A</kbd><kbd>D</kbd> andar · <kbd>ESPAÇO</kbd> pular (no ar, aperte de novo para o pulo duplo; segure na descida para planar) · <kbd>SHIFT</kbd> correr · <kbd>P</kbd> pausar · <kbd>S</kbd> sair do jogo<br>No celular: use os botões abaixo do jogo. Controle de videogame também funciona.</p>`;
 }
 function showTitle(){
   G.ovKey='title';G.state='title';L=buildLevel(0);PL=[];cam=0;camLock=null;setAccent();stopMusic();G.msg=null;
@@ -1132,7 +1132,7 @@ function showBrief(i){
    <div class="cols"><div class="box do"><h4>+ COLETE (BLOCOS !)</h4><ul>${ph.good.map(g=>`<li>${g}</li>`).join('')}</ul></div>
    <div class="box avoid"><h4>× DERROTE OU DESVIE</h4><ul>${ph.bad.map(g=>`<li>${g}</li>`).join('')}</ul></div></div>
    <div class="box why"><h4>CHEFÃO</h4>${ph.boss}. ${ph.bossTip}</div>
-   <div class="row"><button class="btn go" data-act="launch">▶ COMEÇAR FASE</button></div></div>`);
+   <div class="row"><button class="btn go" data-act="launch">▶ COMEÇAR FASE</button><button class="btn ghost" data-act="quit">Sair do jogo</button></div></div>`);
 }
 function launch(){
   G.ovKey='play';
@@ -1156,7 +1156,7 @@ function showWon(){
    <div class="toast" id="ptoast"></div>
    ${PRIZE_TIP}
    <div class="stats"><div class="stat"><span>Pontos</span><b>${G.score}</b></div><div class="stat"><span>Boas práticas na fase</span><b>${L.phasePractices}</b></div><div class="stat"><span>Prêmios</span><b>${G.unlocked.length}/3</b></div></div>
-   <div class="row"><button class="btn primary" data-act="${last?'final':'nextPhase'}">${last?'▶ COLOCAR MEU NOME NO RANKING':'▶ PRÓXIMO PLANETA'}</button></div></div>`);
+   <div class="row"><button class="btn primary" data-act="${last?'final':'nextPhase'}">${last?'▶ COLOCAR MEU NOME NO RANKING':'▶ PRÓXIMO PLANETA'}</button><button class="btn ghost" data-act="quit">Sair do jogo</button></div></div>`);
 }
 function showLost(){
   G.ovKey='lost';
@@ -1164,7 +1164,7 @@ function showLost(){
   showOv(`<div class="card"><p class="kicker">${ph.planet}</p><h2>${G.lostAtBoss?`${ph.boss} venceu desta vez`:G.np>1?'A dupla perdeu os corações':'Você perdeu todos os corações'}</h2>
    <p>${G.lostAtBoss?'Sem problema: você volta para a <b>última bandeira</b>, antes do chefão, com 3 corações. O que você já conquistou na fase continua valendo.':'Sem problema: a fase recomeça com corações cheios.'} Lembre-se da regra deste planeta:</p>
    <div class="cols"><div class="box do"><h4>✓ FAÇA</h4>${ph.do}</div><div class="box avoid"><h4>✗ EVITE</h4>${ph.avoid}</div></div>
-   <div class="row"><button class="btn primary" data-act="retry">↻ TENTAR DE NOVO</button></div></div>`);
+   <div class="row"><button class="btn primary" data-act="retry">↻ TENTAR DE NOVO</button><button class="btn ghost" data-act="quit">Sair do jogo</button></div></div>`);
 }
 function retry(){const s=G.snap;G.score=s.score;G.coins=s.coins;G.practices=s.practices;G.decisions=s.dec;G.decisionsTotal=s.decT;showBrief(G.phase);launch();}
 const bullets=a=>a.map(t=>'• '+t).join('\n');
@@ -1305,9 +1305,16 @@ function showHowto(){
    <p class="keys">Música e efeitos sonoros podem ser ligados ou desligados separadamente no topo da tela.</p>
    <div class="row"><button class="btn primary" data-act="closeModal">Entendi</button></div></div>`);
 }
+function showQuit(){
+  if(NET.role){showLeaveRoom();return;}
+  if(['title','intro'].includes(G.ovKey)&&G.state==='title'){showTitle();return;}
+  showModal(`<div class="card"><p class="kicker">SAIR DO JOGO</p><h2>Quer mesmo sair?</h2>
+    <p>Você volta para a tela inicial. A pontuação e os prêmios desta missão serão perdidos. Se quiser guardar algum checklist, abra antes o <b>🎁 Resgate seu prêmio</b> e copie ou baixe.</p>
+    <div class="row"><button class="btn primary" data-act="closeModal">Continuar jogando</button><button class="btn ghost" data-act="toTitle">Sair do jogo</button></div></div>`);
+}
 function showPause(){
   showModal(`<div class="card"><p class="kicker">PAUSA</p><h2>Jogo pausado</h2><p>Respire. Os riscos esperam.</p>
-   <div class="row"><button class="btn primary" data-act="resume">▶ CONTINUAR</button><button class="btn ghost" data-act="howto">? Como jogar</button><button class="btn ghost" data-act="toTitle">Sair para o início</button></div></div>`);
+   <div class="row"><button class="btn primary" data-act="resume">▶ CONTINUAR</button><button class="btn ghost" data-act="howto">? Como jogar</button><button class="btn ghost" data-act="toTitle">Sair do jogo</button></div></div>`);
   G.wasPaused=false;
 }
 function updateRulesBtn(){const b=document.getElementById('rulesBtn');b.textContent=`🎁 Resgate seu prêmio ${G.unlocked.length}/3`;b.classList.toggle('blink',!!G.prizeNew);}
@@ -1338,6 +1345,7 @@ const ACT={
   howto(){showHowto();},
   closeModal(){hideModal();},
   resume(){hideModal();},
+  quit(){showQuit();},
   pause(){if(NET.role){showLeaveRoom();return;}if(G.state!=='play'&&G.state!=='bossdead')return;if(modal.classList.contains('on'))hideModal();else showPause();updatePauseBtn();},
   toTitle(){hideModal();G.paused=false;showTitle();updatePauseBtn();},
   music(){musicOn=!musicOn;lsSet('jedai-plat-music',musicOn);ensureAudio();if(musGain)musGain.gain.value=musicOn?.55:0;updateAudioBtns();},
@@ -1358,6 +1366,7 @@ addEventListener('keydown',e=>{
   if(e.target&&e.target.tagName==='INPUT'){if(e.key==='Enter'){if(e.target.id==='joinCode')netJoin();else saveRank();}return;}
   if(e.target&&e.target.tagName==='TEXTAREA')return;
   if(e.code==='KeyP'||e.code==='Escape'){if(modal.classList.contains('on'))hideModal();else ACT.pause();e.preventDefault();return;}
+  if(e.code==='KeyS'&&G.ovKey!=='title'){showQuit();e.preventDefault();return;}
   if(e.key==='Enter'){const box=visibleBox();if(box){const b=box.querySelector('.primary,.go');if(b&&!b.disabled&&(document.activeElement===document.body||!box.contains(document.activeElement))){b.click();e.preventDefault();return;}}}
   const k=keyTarget(e.code);if(!k)return;
   if(visibleBox()&&e.code==='Space'&&document.activeElement&&document.activeElement.tagName==='BUTTON')return;
