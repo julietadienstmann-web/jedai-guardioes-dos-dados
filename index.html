@@ -154,7 +154,7 @@ kbd{font-family:var(--pix);font-size:9px;background:#0a0f22;border:2px solid #6f
     <div class="brand"><div class="logo">JEDAI</div><small>GUARDIÕES DOS DADOS · IA RESPONSÁVEL</small></div>
     <div class="hbtns">
       <button class="hbtn" data-act="howto">? Como jogar</button>
-      <button class="hbtn prize" data-act="prizes" id="rulesBtn">🎁 Resgate seu prêmio 0/3</button>
+      <button class="hbtn prize" data-act="prizes" id="rulesBtn">🎁 Resgatar Prêmio</button>
       <button class="hbtn" data-act="ranking">Ranking</button>
       <button class="hbtn" data-act="music" id="musicBtn">♪ Música</button>
       <button class="hbtn" data-act="sfx" id="sfxBtn">Efeitos</button>
@@ -1192,7 +1192,7 @@ function ruleHTML(i,actions){const p=PHASES[i];
   return `<div class="rule"><h3><span>${i+1}/3</span>${p.rule}</h3>
     <div class="cols"><div class="box do"><h4>✓ FAÇA</h4>${ulHTML(p.list.do)}</div><div class="box avoid"><h4>✗ EVITE</h4>${ulHTML(p.list.avoid)}</div></div>
     <p><span class="w">POR QUE IMPORTA:</span> ${p.detail}</p>${actions?prizeActions(i):''}</div>`;}
-const PRIZE_TIP=`<p class="note tip">🎁 Seus prêmios ficam guardados no botão <b>Resgate seu prêmio</b>, na barra superior. Abra quando quiser.</p>`;
+const PRIZE_TIP=`<p class="note tip">🎁 Seus prêmios ficam guardados no botão <b>Resgatar Prêmio</b>, na barra superior. Abra quando quiser.</p>`;
 function rulesHTML(){return PHASES.map((p,i)=>ruleHTML(i,false)).join('');}
 /* ----- downloadable infographic (PNG drawn on a canvas, personalised with nickname and score) ----- */
 async function downloadInfographic(only){
@@ -1253,12 +1253,17 @@ function lockedHTML(i){const p=PHASES[i];
   return `<div class="rule locked"><h3><span>${i+1}/3</span>🔒 Prêmio bloqueado</h3><p>Vença <b>${p.boss}</b> no <b>${p.planet.toLowerCase().replace('planeta','Planeta')} · ${p.name}</b> para destravar este checklist.</p></div>`;}
 function showPrizes(){
   G.prizeNew=false;updateRulesBtn();const n=G.unlocked.length;
-  showModal(`<div class="card wide"><p class="kicker">🎁 MEUS PRÊMIOS · ${n}/3 DESTRAVADOS</p><h2>${n?'Seus checklists de IA responsável':'Seus prêmios ainda estão trancados'}</h2>
-   <p>${n===3?'Parabéns! Você destravou as 3 regras de ouro. Baixe o infográfico e compartilhe com o seu time.':n?'Cada chefão derrotado destrava o checklist da regra de ouro daquele planeta. Copie e use no seu dia a dia!':'Comece a missão: cada chefão derrotado destrava o checklist da regra de ouro daquele planeta.'}</p>
-   ${PHASES.map((p,i)=>G.unlocked.includes(i)?ruleHTML(i,true):lockedHTML(i)).join('')}
-   ${n===3?`<div class="prizebox"><h3>🏆 CHECKLIST COMPLETO</h3><div class="row"><button class="btn primary" data-act="infographic">⬇ BAIXAR INFOGRÁFICO COMPLETO</button><button class="btn go" data-act="share">📨 Enviar para o time</button><button class="btn" data-act="copyList">Copiar checklist completo</button></div></div>`:''}
+  if(n===3){showModal(`<div class="card wide"><p class="kicker">🏆 SEU PRÊMIO · CHECKLIST COMPLETO</p><h2>3 regras de ouro para usar IA com responsabilidade</h2>
+   <p>Você completou a missão e destravou as 3 regras de ouro. Leve o checklist completo para o seu time:</p>
+   <div class="row"><button class="btn primary" data-act="infographic">⬇ BAIXAR INFOGRÁFICO COMPLETO</button><button class="btn go" data-act="share">📨 Enviar para o time</button><button class="btn" data-act="copyList">Copiar checklist completo</button></div>
    <div class="toast" id="mtoast"></div>
-   <p class="note tip">🎁 Esta janela abre a qualquer momento pelo botão <b>Resgate seu prêmio</b>, na barra superior.</p>
+   ${PHASES.map((p,i)=>ruleHTML(i,false)).join('')}
+   <div class="row"><button class="btn ghost" data-act="closeModal">Fechar</button></div></div>`);return;}
+  showModal(`<div class="card wide"><p class="kicker">🎁 MEUS PRÊMIOS · ${n}/3 DESTRAVADOS</p><h2>${n?'Seus checklists de IA responsável':'Seus prêmios ainda estão trancados'}</h2>
+   <p>${n?'Cada chefão derrotado destrava o checklist da regra de ouro daquele planeta. Copie e use no seu dia a dia!':'Comece a missão: cada chefão derrotado destrava o checklist da regra de ouro daquele planeta.'}</p>
+   ${PHASES.map((p,i)=>G.unlocked.includes(i)?ruleHTML(i,true):lockedHTML(i)).join('')}
+   <div class="toast" id="mtoast"></div>
+   <p class="note tip">🎁 Esta janela abre a qualquer momento pelo botão <b>Resgatar Prêmio</b>, na barra superior.</p>
    <div class="row"><button class="btn ghost" data-act="closeModal">Fechar</button></div></div>`);
 }
 function rankBoxHTML(withForm,mode){
@@ -1314,7 +1319,7 @@ function showQuit(){
   if(NET.role){showLeaveRoom();return;}
   if(['title','intro'].includes(G.ovKey)&&G.state==='title'){showTitle();return;}
   showModal(`<div class="card"><p class="kicker">SAIR DO JOGO</p><h2>Quer mesmo sair?</h2>
-    <p>Você volta para a tela inicial. A pontuação e os prêmios desta missão serão perdidos. Se quiser guardar algum checklist, abra antes o <b>🎁 Resgate seu prêmio</b> e copie ou baixe.</p>
+    <p>Você volta para a tela inicial. A pontuação e os prêmios desta missão serão perdidos. Se quiser guardar algum checklist, abra antes o <b>🎁 Resgatar Prêmio</b> e copie ou baixe.</p>
     <div class="row"><button class="btn primary" data-act="closeModal">Continuar jogando</button><button class="btn ghost" data-act="toTitle">Sair do jogo</button></div></div>`);
 }
 function showPause(){
@@ -1322,7 +1327,7 @@ function showPause(){
    <div class="row"><button class="btn primary" data-act="resume">▶ CONTINUAR</button><button class="btn ghost" data-act="howto">? Como jogar</button><button class="btn ghost" data-act="toTitle">Sair do jogo</button></div></div>`);
   G.wasPaused=false;
 }
-function updateRulesBtn(){const b=document.getElementById('rulesBtn');b.textContent=`🎁 Resgate seu prêmio ${G.unlocked.length}/3`;b.classList.toggle('blink',!!G.prizeNew);}
+function updateRulesBtn(){const b=document.getElementById('rulesBtn');b.textContent='🎁 Resgatar Prêmio';b.classList.toggle('blink',!!G.prizeNew);}
 function updatePauseBtn(){document.getElementById('pauseBtn').textContent=NET.role?'⏏ Sair da sala':G.paused?'▶ Voltar':'❚❚ Pausa';}
 function updateAudioBtns(){
   const m=document.getElementById('musicBtn'),s=document.getElementById('sfxBtn');
