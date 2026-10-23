@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-<script async src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js"></script>
+<script async src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js" integrity="sha512-iFU+yF1keEaLDC9HEwPfLMSRaS0unBHE14GEgx6pQKJXjp5v0tvX8xpfp2lgJ62XEjbYp/M5C3CAmej/PWXMyA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <style>
 /* Layout: arcade cabinet — header, 16:9 game screen, message strip, touch pad. Single dark look by design. */
 :root{
@@ -192,6 +192,7 @@ const SRC_BGS='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAABIBAMAAABSEee
 const WEBINAR_TITLE='Inovação com Responsabilidade: Como utilizar a IA no trabalho sem colocar a privacidade em risco';
 const WEBINAR_NAME='Inovação com Responsabilidade';
 const CREDIT='Produzido com IA pela Aspirante Julieta Scheidt Dienstmann';
+const DISCLAIMER='Iniciativa da Missão IA Responsável. Material educativo: não substitui as políticas oficiais da TOTVS.';
 const WEBINAR_BTN=`Assistir ao webinar “${WEBINAR_NAME}” ↗`;
 const WEBINAR_URL='https://unit.edusense.app/#/player/4497?trail_id=1138&lesson_id=48110&viewall=true';
 const NEXT_STEPS='Próximos passos: faça o curso LGPD 360° na Unit e leia a Política de Uso de IA da TOTVS no TDN.';
@@ -1046,7 +1047,10 @@ async function saveRank(){
     try{
       const r=await fetch(RANK_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
         body:JSON.stringify({nick:n,score:G.score,mode,decisions:G.decisions,at:Date.now()})});
-      const j=await r.json();if(!j||!j.ok)throw new Error('rank');
+      const j=await r.json();
+      if(j&&!j.ok&&j.erro==='apelido'){if(t)t.textContent='Esse apelido não é permitido. Escolha outro, por favor.';inp.focus();return;}
+      if(j&&!j.ok&&j.erro==='limite'){if(t)t.textContent='Muita gente salvando ao mesmo tempo. Tente de novo em 1 minuto.';return;}
+      if(!j||!j.ok)throw new Error('rank');
       lsSet('jedai-plat-nick',n);G.rankSaved=true;
       if(t)t.textContent=j.best>G.score?`Seu recorde de ${j.best} pontos continua no ranking. Tente superar!`:'Resultado salvo no ranking do time!';
       if(NET.role==='host'&&NET.room)NET.room.emit('rank',{}).catch(()=>{});
@@ -1103,7 +1107,7 @@ function showTitle(){
     <div class="row"><button class="btn primary blink" data-act="start1">▶ 1 JOGADOR</button>
     <button class="btn go" data-act="online">◎ 2 ONLINE</button></div>
     <div class="row"><button class="btn ghost" data-act="ranking">Ranking</button></div>
-    <p class="note credit">${CREDIT}</p></div>`,'rgba(6,9,22,.35)');
+    <p class="note credit">${CREDIT}</p><p class="note">${DISCLAIMER}</p></div>`,'rgba(6,9,22,.35)');
 }
 function showIntro(){
   G.ovKey='intro';
@@ -1259,7 +1263,8 @@ function showPrizes(){
 }
 function rankBoxHTML(withForm,mode){
   const form=withForm==='guest'?`<p class="note">Quem joga de astronauta <b style="color:var(--green)">verde</b> salva o resultado da dupla no ranking.</p>`
-    :withForm?`<div class="rankform"><input id="nick" maxlength="24" placeholder="${mode==='2P'?'Apelidos da dupla (ex.: Ju & Leo)':'Seu apelido'}" aria-label="Apelido para o ranking"><button class="btn" data-act="saveRank">SALVAR NO RANKING</button></div>`:'';
+    :withForm?`<div class="rankform"><input id="nick" maxlength="24" placeholder="${mode==='2P'?'Apelidos da dupla (ex.: Ju & Leo)':'Seu apelido'}" aria-label="Apelido para o ranking"><button class="btn" data-act="saveRank">SALVAR NO RANKING</button></div>
+      <p class="note">Use um apelido, não o seu nome completo. O apelido e a pontuação ficam visíveis para todos no ranking.</p>`:'';
   return `<div class="box info" style="margin-top:12px"><h4 data-rank-scope="${mode}">${rankScopeLabel(mode)}</h4>${form}
     <ol class="rank" data-rank-list="${mode}"></ol></div>`;
 }

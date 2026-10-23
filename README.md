@@ -11,3 +11,5 @@ Em 3 planetas, você derrota os maus hábitos e libera as 3 regras de ouro:
 
 - Funciona no navegador do computador e do celular, sozinho ou em dupla online (cada um no seu computador).
 - Arte: [Kenney.nl](https://kenney.nl) "Pixel Platformer" (CC0, ver `LICENSE-Kenney.txt`).
+
+_Iniciativa da Missão IA Responsável. Material educativo: não substitui as políticas oficiais da TOTVS._
