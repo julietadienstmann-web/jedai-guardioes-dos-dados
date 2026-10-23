@@ -680,17 +680,23 @@ function closeArena(){const ax=L.arena;if(!L.arenaSave)L.arenaSave=[...Array(10)
 function openArena(){const ax=L.arena;if(L.arenaSave)for(let r=0;r<10;r++){L.grid[r][ax]=L.arenaSave[r][0];L.tix[r][ax]=L.arenaSave[r][1];}}
 // lost to the boss: back to the last flag with 3 hearts (no need to replay the whole planet)
 function retryFromFlag(){
-  const b=L.bossSnap;if(b){G.score=b.score;G.coins=b.coins;}
-  openArena();L.boss=null;L.bossState='none';L.hazards=[];camLock=null;L.respawn={x:L.flag.x,y:L.flag.y};
+  const f=L.flag,sn=L.flagSnap,ep=(L.ep||0)+1;
+  Object.assign(G,{score:sn.score,coins:sn.coins,practices:sn.practices,decisions:sn.dec,decisionsTotal:sn.decT});
+  L=buildLevel(G.phase);L.ep=ep;L.flag=f;L.flagSnap=sn;L.phasePractices=sn.pp;L.respawn={x:f.x,y:f.y};camLock=null;
+  L.checks.forEach((k,i)=>{if(i<=f.i)k.on=true;});
+  // what was before the flag stays done
+  const fc=Math.floor(f.x/T);
+  for(let r=0;r<12;r++)for(let c=0;c<fc;c++){const ch=L.grid[r][c];if(ch==='!')setUsed(c,r,30);else if(ch==='?'||ch==='h')setUsed(c,r,31);}
+  L.items=L.items.filter(i=>i.x>=f.x);L.enemies=L.enemies.filter(e=>e.x>=f.x);
   PL.forEach((p,k)=>Object.assign(p,{x:L.flag.x+k*14,y:L.flag.y-8,vx:0,vy:0,hearts:3,shield:false,dead:false,ghost:false,deadT:0,ghostT:0,inv:1.5,glide:GLIDE,airJumps:AIRJ,onGround:false,stand:null}));
   cam=Math.max(0,Math.min(L.W*T-VW,L.flag.x-VW*.42));
   G.ovKey='play';hideOv();G.state='play';G.msg=null;ensureAudio();playMusic('main',THEMES[L.ph.theme].music);
-  banner('DE VOLTA À BANDEIRA','Você recomeça antes do chefão, com 3 corações. Boa sorte!','#ffd25e',3.5);
+  banner('DE VOLTA À BANDEIRA','3 corações. Os blocos e as perguntas depois da bandeira voltaram: faça de novo!','#ffd25e',3.5);
 }
 function startBoss(){
   const ax=L.arena;camLock=ax*T;L.bossState='fight';
   L.enemies=L.enemies.filter(e=>e.x>(ax+1)*T);
-  closeArena();L.bossSnap={score:G.score,coins:G.coins};
+  closeArena();
   for(const p of PL)if(p.x<(ax+1)*T){p.x=(ax+2)*T;p.y=100;p.vy=0;}
   L.respawn={x:(ax+2)*T,y:10*T-18};
   const left=(ax+1)*T,right=(ax+21)*T,ground=10*T;
@@ -806,7 +812,8 @@ function update(dt){
   for(const p of L.parts){p.t-=dt;if(p.kind==='heartpop'){p.y+=p.vy*dt;p.vy*=.94;}else if(p.kind==='coinpop'){p.vy+=700*dt;p.y+=p.vy*dt;}else{p.vy+=500*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;}}
   L.parts=L.parts.filter(p=>p.t>0);
   for(const f of L.floats){f.t-=dt;f.y-=22*dt;}L.floats=L.floats.filter(f=>f.t>0);
-  for(const k of L.checks)if(!k.on&&activePlayers().some(p=>p.x+p.w>k.x&&p.x<k.x+T)){k.on=true;L.respawn={x:k.x,y:k.y-10};L.flag={x:k.x,y:k.y-10};SFX.check();{const q=activePlayers()[0];for(const g of PL)if(g.ghost&&q)revive(g,q);}
+  for(const k of L.checks)if(!k.on&&activePlayers().some(p=>p.x+p.w>k.x&&p.x<k.x+T)){k.on=true;L.respawn={x:k.x,y:k.y-10};L.flag={x:k.x,y:k.y-10,i:L.checks.indexOf(k)};
+    L.flagSnap={score:G.score,coins:G.coins,practices:G.practices,pp:L.phasePractices,dec:G.decisions,decT:G.decisionsTotal};SFX.check();{const q=activePlayers()[0];for(const g of PL)if(g.ghost&&q)revive(g,q);}
     flash('flag','BANDEIRA ATIVADA ✓','Progresso salvo! Se cair em um buraco, você volta para esta bandeira e perde só 1 coração.',5);}
   if(L.bossState==='none'&&G.state==='play'&&activePlayers().some(p=>p.x>(L.arena+3)*T))startBoss();
   updateCamera(dt);
@@ -1171,9 +1178,9 @@ function showWon(){
 }
 function showLost(){
   G.ovKey='lost';
-  G.state='lost';stopMusic();G.msg=null;const ph=L.ph;G.lostAtBoss=L.bossState==='fight'&&!!L.flag;
+  G.state='lost';stopMusic();G.msg=null;const ph=L.ph;G.lostAtBoss=L.bossState==='fight'&&!!L.flag;G.lostAtFlag=!!(L.flag&&L.flagSnap);
   showOv(`<div class="card"><p class="kicker">${ph.planet}</p><h2>${G.lostAtBoss?`${ph.boss} venceu desta vez`:G.np>1?'A dupla perdeu os corações':'Você perdeu todos os corações'}</h2>
-   <p>${G.lostAtBoss?'Sem problema: você volta para a <b>última bandeira</b>, antes do chefão, com 3 corações. O que você já conquistou na fase continua valendo.':'Sem problema: a fase recomeça com corações cheios.'} Lembre-se da regra deste planeta:</p>
+   <p>${G.lostAtFlag?'Sem problema: você volta para a <b>última bandeira</b>, com 3 corações. Os blocos, as perguntas e os inimigos depois dela voltam para você fazer de novo, e a pontuação volta à da bandeira.':'Sem problema: a fase recomeça com corações cheios.'} Lembre-se da regra deste planeta:</p>
    <div class="cols"><div class="box do"><h4>✓ FAÇA</h4>${ph.do}</div><div class="box avoid"><h4>✗ EVITE</h4>${ph.avoid}</div></div>
    <div class="row"><button class="btn primary" data-act="retry">↻ TENTAR DE NOVO</button><button class="btn ghost" data-act="quit">Sair do jogo</button></div></div>`);
 }
@@ -1350,7 +1357,7 @@ const ACT={
   toBrief(){showBrief(0);},
   launch(){launch();},
   nextPhase(){showBrief(G.phase+1);},
-  retry(){if(G.lostAtBoss)retryFromFlag();else retry();},
+  retry(){if(G.lostAtFlag)retryFromFlag();else retry();},
   final(){showFinal();},
   again(){showTitle();},
   rules(){showRules();},
@@ -1627,7 +1634,7 @@ function makeSnap(){
   s.P=PL.map(p=>[r(p.x),r(p.y),r(p.vx),p.face,p.onGround?1:0,p.hearts,p.shield?1:0,p.ghost?1:0,p.dead?1:0,r(p.inv*10),p.gliding?1:0,Math.round(p.anim*10)/10,p.ghostT>1?1:0]);
   s.E=L.enemies.filter(vis).map(e=>[e.id,e.type,r(e.x),r(e.y),e.alive?1:0,e.kind==='pop'?2:e.kind==='squash'?1:0,e.vx>0?1:0,r(e.t*10),e.onGround?1:0,L.ph.bad.indexOf(e.label),e.active?1:0]);
   s.I=L.items.filter(vis).map(it=>[it.id,it.kind[0],r(it.x),r(it.y),it.rise>0?1:0,it.label?L.ph.good.indexOf(it.label):-1]);
-  s.U=L.used;s.K=L.checks.map(k=>k.on?1:0);
+  s.U=L.used;s.K=L.checks.map(k=>k.on?1:0);s.ep=L.ep||0;
   s.Gt=L.gates.map(g=>[g.correctIsA?1:0,g.answered?1:0,g.chosen||'',g.result||'']);
   s.M=L.movers.map(m=>r(m.x));
   const b=L.boss;s.B=b?[r(b.x),r(b.y),b.w,b.h,b.hp,b.max,b.state,r(b.inv*10),b.flip?1:0,b.dead?1:0,b.gone?1:0,r(b.t*10)]:null;
@@ -1691,6 +1698,7 @@ function applySnap(s){
   if(s.mu!==curMu){if(s.mu){const [n,t]=String(s.mu).split('|');if(SONGS[n]){ensureAudio();playMusic(n,num(t));}}else stopMusic();}
   if(s.cam==null||!L)return;
   if(L.pi!==ph)ensureGuestLevel(ph);
+  if((num(s.ep))!==(L.ep||0)){L=buildLevel(ph);L.ep=num(s.ep);camLock=null;}
   NET.camT=num(s.cam);L.phasePractices=num(s.pp);
   if(s.bs==='fight'&&L.bossState!=='fight'){L.bossState='fight';camLock=L.arena*T;closeArena();}
   else if(s.bs==='none'&&L.bossState==='fight'){L.bossState='none';camLock=null;openArena();L.boss=null;}
