@@ -656,10 +656,21 @@ function collectPractice(it,p){
 }
 
 /* ================= BOSSES ================= */
+function closeArena(){const ax=L.arena;if(!L.arenaSave)L.arenaSave=[...Array(10)].map((_,r)=>[L.grid[r][ax],L.tix[r][ax]]);for(let r=0;r<10;r++){L.grid[r][ax]='L';L.tix[r][ax]=L.th.brick;}}
+function openArena(){const ax=L.arena;if(L.arenaSave)for(let r=0;r<10;r++){L.grid[r][ax]=L.arenaSave[r][0];L.tix[r][ax]=L.arenaSave[r][1];}}
+// lost to the boss: back to the last flag with 3 hearts (no need to replay the whole planet)
+function retryFromFlag(){
+  const b=L.bossSnap;if(b){G.score=b.score;G.coins=b.coins;}
+  openArena();L.boss=null;L.bossState='none';L.hazards=[];camLock=null;L.respawn={x:L.flag.x,y:L.flag.y};
+  PL.forEach((p,k)=>Object.assign(p,{x:L.flag.x+k*14,y:L.flag.y-8,vx:0,vy:0,hearts:3,shield:false,dead:false,ghost:false,deadT:0,ghostT:0,inv:1.5,glide:GLIDE,airJumps:AIRJ,onGround:false,stand:null}));
+  cam=Math.max(0,Math.min(L.W*T-VW,L.flag.x-VW*.42));
+  G.ovKey='play';hideOv();G.state='play';G.msg=null;ensureAudio();playMusic('main',THEMES[L.ph.theme].music);
+  banner('DE VOLTA À BANDEIRA','Você recomeça antes do chefão, com 3 corações. Boa sorte!','#ffd25e',3.5);
+}
 function startBoss(){
   const ax=L.arena;camLock=ax*T;L.bossState='fight';
   L.enemies=L.enemies.filter(e=>e.x>(ax+1)*T);
-  for(let r=0;r<10;r++){L.grid[r][ax]='L';L.tix[r][ax]=L.th.brick;}
+  closeArena();L.bossSnap={score:G.score,coins:G.coins};
   for(const p of PL)if(p.x<(ax+1)*T){p.x=(ax+2)*T;p.y=100;p.vy=0;}
   L.respawn={x:(ax+2)*T,y:10*T-18};
   const left=(ax+1)*T,right=(ax+21)*T,ground=10*T;
@@ -771,7 +782,7 @@ function update(dt){
   for(const p of L.parts){p.t-=dt;if(p.kind==='heartpop'){p.y+=p.vy*dt;p.vy*=.94;}else if(p.kind==='coinpop'){p.vy+=700*dt;p.y+=p.vy*dt;}else{p.vy+=500*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;}}
   L.parts=L.parts.filter(p=>p.t>0);
   for(const f of L.floats){f.t-=dt;f.y-=22*dt;}L.floats=L.floats.filter(f=>f.t>0);
-  for(const k of L.checks)if(!k.on&&activePlayers().some(p=>p.x+p.w>k.x&&p.x<k.x+T)){k.on=true;L.respawn={x:k.x,y:k.y-10};SFX.check();{const q=activePlayers()[0];for(const g of PL)if(g.ghost&&q)revive(g,q);}
+  for(const k of L.checks)if(!k.on&&activePlayers().some(p=>p.x+p.w>k.x&&p.x<k.x+T)){k.on=true;L.respawn={x:k.x,y:k.y-10};L.flag={x:k.x,y:k.y-10};SFX.check();{const q=activePlayers()[0];for(const g of PL)if(g.ghost&&q)revive(g,q);}
     flash('flag','BANDEIRA ATIVADA ✓','Progresso salvo! Se cair em um buraco, você volta para esta bandeira e perde só 1 coração.',5);}
   if(L.bossState==='none'&&G.state==='play'&&activePlayers().some(p=>p.x>(L.arena+3)*T))startBoss();
   updateCamera(dt);
@@ -1128,9 +1139,9 @@ function showWon(){
 }
 function showLost(){
   G.ovKey='lost';
-  G.state='lost';stopMusic();G.msg=null;const ph=L.ph;
-  showOv(`<div class="card"><p class="kicker">${ph.planet}</p><h2>${G.np>1?'A dupla perdeu os corações':'Você perdeu todos os corações'}</h2>
-   <p>Sem problema: a fase recomeça com corações cheios. Lembre-se da regra deste planeta:</p>
+  G.state='lost';stopMusic();G.msg=null;const ph=L.ph;G.lostAtBoss=L.bossState==='fight'&&!!L.flag;
+  showOv(`<div class="card"><p class="kicker">${ph.planet}</p><h2>${G.lostAtBoss?`${ph.boss} venceu desta vez`:G.np>1?'A dupla perdeu os corações':'Você perdeu todos os corações'}</h2>
+   <p>${G.lostAtBoss?'Sem problema: você volta para a <b>última bandeira</b>, antes do chefão, com 3 corações. O que você já conquistou na fase continua valendo.':'Sem problema: a fase recomeça com corações cheios.'} Lembre-se da regra deste planeta:</p>
    <div class="cols"><div class="box do"><h4>✓ FAÇA</h4>${ph.do}</div><div class="box avoid"><h4>✗ EVITE</h4>${ph.avoid}</div></div>
    <div class="row"><button class="btn primary" data-act="retry">↻ TENTAR DE NOVO</button></div></div>`);
 }
@@ -1299,7 +1310,7 @@ const ACT={
   toBrief(){showBrief(0);},
   launch(){launch();},
   nextPhase(){showBrief(G.phase+1);},
-  retry(){retry();},
+  retry(){if(G.lostAtBoss)retryFromFlag();else retry();},
   final(){showFinal();},
   again(){showTitle();},
   rules(){showRules();},
@@ -1632,7 +1643,8 @@ function applySnap(s){
   if(s.cam==null||!L)return;
   if(L.pi!==ph)ensureGuestLevel(ph);
   NET.camT=num(s.cam);L.phasePractices=num(s.pp);
-  if(s.bs==='fight'&&L.bossState!=='fight'){L.bossState='fight';camLock=L.arena*T;for(let r=0;r<10;r++){L.grid[r][L.arena]='L';L.tix[r][L.arena]=L.th.brick;}}
+  if(s.bs==='fight'&&L.bossState!=='fight'){L.bossState='fight';camLock=L.arena*T;closeArena();}
+  else if(s.bs==='none'&&L.bossState==='fight'){L.bossState='none';camLock=null;openArena();L.boss=null;}
   if(Array.isArray(s.P))s.P.forEach((a,i)=>{const p=PL[i];if(!p||!Array.isArray(a))return;
     p.tx=num(a[0]);p.ty=num(a[1]);p.vx=num(a[2]);p.face=a[3]<0?-1:1;p.onGround=!!a[4];p.hearts=Math.max(0,Math.min(MAXH,num(a[5])));p.shield=!!a[6];
     p.ghost=!!a[7];p.dead=!!a[8];p.inv=num(a[9])/10;p.gliding=!!a[10];p.anim=num(a[11]);p.ghostT=a[12]?2:0;if(p.dead)p.deadT=1;});
